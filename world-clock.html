@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Digital Clock - Time Zones</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #1e1e1e;
+      color: #f8f8f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-top: 40px;
+      font-size: 2rem;
+      letter-spacing: 2px;
+    }
+    .clocks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-top: 40px;
+      justify-content: center;
+    }
+    .clock {
+      background: #262626;
+      padding: 1.5rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 2px 16px #0008;
+      min-width: 220px;
+      text-align: center;
+    }
+    .zone {
+      font-size: 1.1rem;
+      color: #aaa;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+    .time {
+      font-family: 'Fira Mono', monospace;
+      font-size: 2.3rem;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h1>World Digital Clock</h1>
+  <div class="clocks" id="clocks"></div>
+
+  <script>
+    // List your desired time zones here
+    const timeZones = [
+      { label: "UTC", zone: "UTC" },
+      { label: "New York", zone: "America/New_York" },
+      { label: "London", zone: "Europe/London" },
+      { label: "Paris", zone: "Europe/Paris" },
+      { label: "Tokyo", zone: "Asia/Tokyo" },
+      { label: "Sydney", zone: "Australia/Sydney" },
+      { label: "Ho Chi Minh City", zone: "Asia/Ho_Chi_Minh" },
+    ];
+
+    // Create a clock for each time zone
+    const clocksDiv = document.getElementById('clocks');
+    timeZones.forEach((tz, idx) => {
+      const clock = document.createElement('div');
+      clock.className = 'clock';
+      clock.innerHTML = `
+        <div class="zone">${tz.label} <br><span style="font-size:0.85em">${tz.zone}</span></div>
+        <div class="time" id="time-${idx}">--:--:--</div>
+      `;
+      clocksDiv.appendChild(clock);
+    });
+
+    // Function to update times
+    function updateClocks() {
+      const now = new Date();
+      timeZones.forEach((tz, idx) => {
+        const options = {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+          timeZone: tz.zone,
+        };
+        const timeString = now.toLocaleTimeString('en-US', options);
+        document.getElementById(`time-${idx}`).textContent = timeString;
+      });
+    }
+
+    // Initial update and then every second
+    updateClocks();
+    setInterval(updateClocks, 1000);
+  </script>
+</body>
+</html>
