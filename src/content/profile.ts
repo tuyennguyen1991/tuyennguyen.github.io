@@ -28,7 +28,7 @@ export const profile: Profile = {
   ],
   socials: [
     { label: 'GitHub', url: 'https://github.com/tuyennguyen1991', external: true },
-    { label: 'LinkedIn', url: 'https://www.linkedin.com/in/tuyennguyen1991', external: true },
-    { label: 'Email', url: 'mailto:tuyen.nguyen@example.com', external: false },
+    { label: 'LinkedIn', url: 'https://www.linkedin.com/in/tuyen-nguyen-02a965199', external: true },
+    { label: 'Email', url: 'mailto:tuyen.nguyen.engineer@gmail.com', external: false },
   ],
 }
