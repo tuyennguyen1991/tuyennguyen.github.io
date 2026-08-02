@@ -445,82 +445,6 @@ export function RequestDemo() {
         </div>
 
         <div className={fieldWrapperClass}>
-          <label className={labelClass} htmlFor="message">
-            Message / Requirements
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            maxLength={1000}
-            rows={4}
-            className={inputClass}
-            value={formData.message}
-            onChange={(event) => updateField('message', event.target.value)}
-          />
-        </div>
-
-        <div className={fieldWrapperClass}>
-          <label className={labelClass} htmlFor="referralSource">
-            How did you hear about us?
-          </label>
-          <select
-            id="referralSource"
-            name="referralSource"
-            className={inputClass}
-            value={formData.referralSource}
-            onChange={(event) =>
-              updateField(
-                'referralSource',
-                event.target.value as RequestDemoFormData['referralSource'],
-              )
-            }
-          >
-            <option value="">Select an option</option>
-            {REFERRAL_SOURCE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="flex items-start gap-2 text-sm text-slate-700">
-            <input
-              id="consent"
-              name="consent"
-              type="checkbox"
-              className={`${checkboxClass} mt-0.5`}
-              checked={formData.consent}
-              onChange={(event) => updateField('consent', event.target.checked)}
-              onBlur={() => markTouched('consent')}
-              aria-required="true"
-              aria-invalid={shouldShowError('consent')}
-              aria-describedby={shouldShowError('consent') ? 'consent-error' : undefined}
-            />
-            I agree to the Privacy Policy and consent to being contacted about this request.{' '}
-            <span aria-hidden="true">*</span>
-          </label>
-          {shouldShowError('consent') && (
-            <p id="consent-error" className={errorTextClass} role="alert">
-              {errors.consent}
-            </p>
-          )}
-        </div>
-
-        <label className="flex items-start gap-2 text-sm text-slate-700">
-          <input
-            id="marketingOptIn"
-            name="marketingOptIn"
-            type="checkbox"
-            className={`${checkboxClass} mt-0.5`}
-            checked={formData.marketingOptIn}
-            onChange={(event) => updateField('marketingOptIn', event.target.checked)}
-          />
-          Keep me updated with product news and offers.
-        </label>
-
-        <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="customerIndustry">
             Customer Industry
           </label>
@@ -652,6 +576,21 @@ export function RequestDemo() {
           />
         </div>
 
+        <div className={fieldWrapperClass}>
+          <label className={labelClass} htmlFor="message">
+            Message / Requirements
+          </label>
+          <textarea
+            id="message"
+            name="message"
+            maxLength={1000}
+            rows={4}
+            className={inputClass}
+            value={formData.message}
+            onChange={(event) => updateField('message', event.target.value)}
+          />
+        </div>
+
         <fieldset id="integrationsNeeded" className={fieldWrapperClass}>
           <legend className={labelClass}>Integrations Needed</legend>
           <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -725,6 +664,67 @@ export function RequestDemo() {
         <input type="hidden" name="utm_source" value={utm.utm_source ?? ''} />
         <input type="hidden" name="utm_medium" value={utm.utm_medium ?? ''} />
         <input type="hidden" name="utm_campaign" value={utm.utm_campaign ?? ''} />
+
+        <div className={fieldWrapperClass}>
+          <label className={labelClass} htmlFor="referralSource">
+            How did you hear about us?
+          </label>
+          <select
+            id="referralSource"
+            name="referralSource"
+            className={inputClass}
+            value={formData.referralSource}
+            onChange={(event) =>
+              updateField(
+                'referralSource',
+                event.target.value as RequestDemoFormData['referralSource'],
+              )
+            }
+          >
+            <option value="">Select an option</option>
+            {REFERRAL_SOURCE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="flex items-start gap-2 text-sm text-slate-700">
+            <input
+              id="consent"
+              name="consent"
+              type="checkbox"
+              className={`${checkboxClass} mt-0.5`}
+              checked={formData.consent}
+              onChange={(event) => updateField('consent', event.target.checked)}
+              onBlur={() => markTouched('consent')}
+              aria-required="true"
+              aria-invalid={shouldShowError('consent')}
+              aria-describedby={shouldShowError('consent') ? 'consent-error' : undefined}
+            />
+            I agree to the Privacy Policy and consent to being contacted about this request.{' '}
+            <span aria-hidden="true">*</span>
+          </label>
+          {shouldShowError('consent') && (
+            <p id="consent-error" className={errorTextClass} role="alert">
+              {errors.consent}
+            </p>
+          )}
+        </div>
+
+        <label className="flex items-start gap-2 text-sm text-slate-700">
+          <input
+            id="marketingOptIn"
+            name="marketingOptIn"
+            type="checkbox"
+            className={`${checkboxClass} mt-0.5`}
+            checked={formData.marketingOptIn}
+            onChange={(event) => updateField('marketingOptIn', event.target.checked)}
+          />
+          Keep me updated with product news and offers.
+        </label>
 
         <button
           type="submit"
