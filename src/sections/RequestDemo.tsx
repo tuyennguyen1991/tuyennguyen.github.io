@@ -191,7 +191,7 @@ export function RequestDemo() {
     <section id="request-demo" className="mx-auto max-w-3xl px-6 py-20">
       <h2 className="text-3xl font-semibold text-slate-900">Request a Demo</h2>
       <p className="mt-4 text-slate-600">
-        Tell us about your database needs and a specialist will follow up to schedule your demo.
+        Tell us about your needs and a specialist will follow up to schedule your demo.
       </p>
       {submissionState === 'error' && (
         <p role="alert" className="mt-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">

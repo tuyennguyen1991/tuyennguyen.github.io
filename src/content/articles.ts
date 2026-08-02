@@ -1,35 +1,35 @@
+import { parseFrontmatter, renderMarkdown } from '../lib/markdown'
+
 export interface Article {
   id: string
   title: string
   date: string
   summary: string
-  url: string
+  domain: string
   tags: string[]
+  contentHtml: string
 }
 
-export const articles: Article[] = [
-  {
-    id: 'scaling-event-driven-systems',
-    title: 'Scaling Event-Driven Systems: Lessons from Production',
-    date: '2024-03-12',
-    summary: 'What we learned migrating a monolith to an event-driven architecture at scale.',
-    url: 'https://medium.com/@tuyennguyen1991/scaling-event-driven-systems',
-    tags: ['Architecture', 'Kafka'],
-  },
-  {
-    id: 'leading-distributed-teams',
-    title: 'Leading Distributed Engineering Teams Through Ambiguity',
-    date: '2023-11-02',
-    summary: 'Practical lessons on leading globally distributed teams through major migrations.',
-    url: 'https://dev.to/tuyennguyen1991/leading-distributed-teams',
-    tags: ['Leadership'],
-  },
-  {
-    id: 'ai-in-incident-response',
-    title: 'Bringing AI into Incident Response Without Losing Trust',
-    date: '2024-06-20',
-    summary: 'How we rolled out AI-assisted triage while keeping engineers in the loop.',
-    url: 'https://medium.com/@tuyennguyen1991/ai-in-incident-response',
-    tags: ['AI', 'SRE'],
-  },
-]
+const articleModules = import.meta.glob('./articles/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+function toArticle(raw: string): Article {
+  const { data, content } = parseFrontmatter(raw)
+
+  return {
+    id: data.id as string,
+    title: data.title as string,
+    date: data.date as string,
+    summary: data.summary as string,
+    domain: data.domain as string,
+    tags: (data.tags as string[]) ?? [],
+    contentHtml: renderMarkdown(content),
+  }
+}
+
+export const articles: Article[] = Object.values(articleModules)
+  .map(toArticle)
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
