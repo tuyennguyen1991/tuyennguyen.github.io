@@ -187,7 +187,7 @@ export function RequestDemo() {
       <form onSubmit={handleSubmit} className="mt-10 space-y-6" noValidate>
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="fullName">
-            Full Name
+            Full Name <span aria-hidden="true">*</span>
           </label>
           <input
             id="fullName"
@@ -197,6 +197,7 @@ export function RequestDemo() {
             value={formData.fullName}
             onChange={(event) => updateField('fullName', event.target.value)}
             onBlur={() => markTouched('fullName')}
+            aria-required="true"
             aria-invalid={shouldShowError('fullName')}
             aria-describedby={shouldShowError('fullName') ? 'fullName-error' : undefined}
           />
@@ -209,7 +210,7 @@ export function RequestDemo() {
 
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="workEmail">
-            Work Email
+            Work Email <span aria-hidden="true">*</span>
           </label>
           <input
             id="workEmail"
@@ -219,6 +220,7 @@ export function RequestDemo() {
             value={formData.workEmail}
             onChange={(event) => updateField('workEmail', event.target.value)}
             onBlur={() => markTouched('workEmail')}
+            aria-required="true"
             aria-invalid={shouldShowError('workEmail')}
             aria-describedby={shouldShowError('workEmail') ? 'workEmail-error' : undefined}
           />
@@ -231,7 +233,7 @@ export function RequestDemo() {
 
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="phone">
-            Phone Number
+            Phone Number <span aria-hidden="true">*</span>
           </label>
           <input
             id="phone"
@@ -241,6 +243,7 @@ export function RequestDemo() {
             value={formData.phone}
             onChange={(event) => updateField('phone', event.target.value)}
             onBlur={() => markTouched('phone')}
+            aria-required="true"
             aria-invalid={shouldShowError('phone')}
             aria-describedby={shouldShowError('phone') ? 'phone-error' : undefined}
           />
@@ -253,7 +256,7 @@ export function RequestDemo() {
 
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="companyName">
-            Company Name
+            Company Name <span aria-hidden="true">*</span>
           </label>
           <input
             id="companyName"
@@ -263,6 +266,7 @@ export function RequestDemo() {
             value={formData.companyName}
             onChange={(event) => updateField('companyName', event.target.value)}
             onBlur={() => markTouched('companyName')}
+            aria-required="true"
             aria-invalid={shouldShowError('companyName')}
             aria-describedby={shouldShowError('companyName') ? 'companyName-error' : undefined}
           />
@@ -275,7 +279,7 @@ export function RequestDemo() {
 
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="jobTitle">
-            Job Title
+            Job Title <span aria-hidden="true">*</span>
           </label>
           <input
             id="jobTitle"
@@ -285,6 +289,7 @@ export function RequestDemo() {
             value={formData.jobTitle}
             onChange={(event) => updateField('jobTitle', event.target.value)}
             onBlur={() => markTouched('jobTitle')}
+            aria-required="true"
             aria-invalid={shouldShowError('jobTitle')}
             aria-describedby={shouldShowError('jobTitle') ? 'jobTitle-error' : undefined}
           />
@@ -297,7 +302,7 @@ export function RequestDemo() {
 
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="country">
-            Country
+            Country <span aria-hidden="true">*</span>
           </label>
           <select
             id="country"
@@ -306,6 +311,7 @@ export function RequestDemo() {
             value={formData.country}
             onChange={(event) => updateField('country', event.target.value)}
             onBlur={() => markTouched('country')}
+            aria-required="true"
             aria-invalid={shouldShowError('country')}
             aria-describedby={shouldShowError('country') ? 'country-error' : undefined}
           >
@@ -325,7 +331,7 @@ export function RequestDemo() {
 
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="companySize">
-            Company Size
+            Company Size <span aria-hidden="true">*</span>
           </label>
           <select
             id="companySize"
@@ -336,6 +342,7 @@ export function RequestDemo() {
               updateField('companySize', event.target.value as RequestDemoFormData['companySize'])
             }
             onBlur={() => markTouched('companySize')}
+            aria-required="true"
             aria-invalid={shouldShowError('companySize')}
             aria-describedby={shouldShowError('companySize') ? 'companySize-error' : undefined}
           >
@@ -412,7 +419,9 @@ export function RequestDemo() {
         </div>
 
         <fieldset id="useCases" className={fieldWrapperClass}>
-          <legend className={labelClass}>Primary Use Case / Interest</legend>
+          <legend className={labelClass}>
+            Primary Use Case / Interest <span aria-hidden="true">*</span>
+          </legend>
           <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {USE_CASE_OPTIONS.map((option) => (
               <label key={option} className="flex items-center gap-2 text-sm text-slate-700">
@@ -435,7 +444,7 @@ export function RequestDemo() {
 
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="timeline">
-            Project Timeline
+            Project Timeline <span aria-hidden="true">*</span>
           </label>
           <select
             id="timeline"
@@ -446,6 +455,7 @@ export function RequestDemo() {
               updateField('timeline', event.target.value as RequestDemoFormData['timeline'])
             }
             onBlur={() => markTouched('timeline')}
+            aria-required="true"
             aria-invalid={shouldShowError('timeline')}
             aria-describedby={shouldShowError('timeline') ? 'timeline-error' : undefined}
           >
@@ -552,10 +562,12 @@ export function RequestDemo() {
               checked={formData.consent}
               onChange={(event) => updateField('consent', event.target.checked)}
               onBlur={() => markTouched('consent')}
+              aria-required="true"
               aria-invalid={shouldShowError('consent')}
               aria-describedby={shouldShowError('consent') ? 'consent-error' : undefined}
             />
-            I agree to the Privacy Policy and consent to being contacted about this request.
+            I agree to the Privacy Policy and consent to being contacted about this request.{' '}
+            <span aria-hidden="true">*</span>
           </label>
           {shouldShowError('consent') && (
             <p id="consent-error" className={errorTextClass} role="alert">

@@ -3,15 +3,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { RequestDemo } from './RequestDemo'
 
 function fillRequiredFields() {
-  fireEvent.change(screen.getByLabelText('Full Name'), { target: { value: 'Jane Doe' } })
-  fireEvent.change(screen.getByLabelText('Work Email'), { target: { value: 'jane@acme.com' } })
-  fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '+14155551234' } })
-  fireEvent.change(screen.getByLabelText('Company Name'), { target: { value: 'Acme Corp' } })
-  fireEvent.change(screen.getByLabelText('Job Title'), { target: { value: 'Engineer' } })
-  fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'US' } })
-  fireEvent.change(screen.getByLabelText('Company Size'), { target: { value: '1-50' } })
+  fireEvent.change(screen.getByLabelText(/^Full Name/), { target: { value: 'Jane Doe' } })
+  fireEvent.change(screen.getByLabelText(/^Work Email/), { target: { value: 'jane@acme.com' } })
+  fireEvent.change(screen.getByLabelText(/^Phone Number/), { target: { value: '+14155551234' } })
+  fireEvent.change(screen.getByLabelText(/^Company Name/), { target: { value: 'Acme Corp' } })
+  fireEvent.change(screen.getByLabelText(/^Job Title/), { target: { value: 'Engineer' } })
+  fireEvent.change(screen.getByLabelText(/^Country/), { target: { value: 'US' } })
+  fireEvent.change(screen.getByLabelText(/^Company Size/), { target: { value: '1-50' } })
   fireEvent.click(screen.getByRole('checkbox', { name: 'Data migration' }))
-  fireEvent.change(screen.getByLabelText('Project Timeline'), { target: { value: 'researching' } })
+  fireEvent.change(screen.getByLabelText(/^Project Timeline/), { target: { value: 'researching' } })
   fireEvent.click(
     screen.getByRole('checkbox', {
       name: 'I agree to the Privacy Policy and consent to being contacted about this request.',
@@ -31,27 +31,27 @@ describe('RequestDemo', () => {
 
   it('renders every required text/email/tel field with a label', () => {
     render(<RequestDemo />)
-    expect(screen.getByLabelText('Full Name')).toBeInTheDocument()
-    expect(screen.getByLabelText('Work Email')).toBeInTheDocument()
-    expect(screen.getByLabelText('Phone Number')).toBeInTheDocument()
-    expect(screen.getByLabelText('Company Name')).toBeInTheDocument()
-    expect(screen.getByLabelText('Job Title')).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Full Name/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Work Email/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Phone Number/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Company Name/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Job Title/)).toBeInTheDocument()
   })
 
   it('renders every select field with a label', () => {
     render(<RequestDemo />)
-    expect(screen.getByLabelText('Country')).toBeInTheDocument()
-    expect(screen.getByLabelText('Company Size')).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Country/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Company Size/)).toBeInTheDocument()
     expect(screen.getByLabelText('Current Database / Platform')).toBeInTheDocument()
     expect(screen.getByLabelText('Data Volume (approx.)')).toBeInTheDocument()
-    expect(screen.getByLabelText('Project Timeline')).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Project Timeline/)).toBeInTheDocument()
     expect(screen.getByLabelText('Budget Range')).toBeInTheDocument()
     expect(screen.getByLabelText('How did you hear about us?')).toBeInTheDocument()
   })
 
   it('renders the use case checkbox group', () => {
     render(<RequestDemo />)
-    expect(screen.getByText('Primary Use Case / Interest')).toBeInTheDocument()
+    expect(screen.getByText(/Primary Use Case \/ Interest/)).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: 'Data migration' })).toBeInTheDocument()
   })
 
@@ -77,13 +77,13 @@ describe('RequestDemo', () => {
   it('shows an inline error and focuses the first invalid field when submitted empty', () => {
     render(<RequestDemo />)
     fireEvent.submit(screen.getByRole('button', { name: 'Request Demo' }).closest('form')!)
-    expect(screen.getByLabelText('Full Name')).toHaveFocus()
-    expect(screen.getByLabelText('Full Name')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(/^Full Name/)).toHaveFocus()
+    expect(screen.getByLabelText(/^Full Name/)).toHaveAttribute('aria-invalid', 'true')
   })
 
   it('shows the exact spec error message for a blocklisted free-email domain', () => {
     render(<RequestDemo />)
-    const emailInput = screen.getByLabelText('Work Email')
+    const emailInput = screen.getByLabelText(/^Work Email/)
     fireEvent.change(emailInput, { target: { value: 'jane@gmail.com' } })
     fireEvent.blur(emailInput)
     expect(screen.getByText('Please use your company email address.')).toBeInTheDocument()
@@ -132,6 +132,40 @@ describe('RequestDemo', () => {
       'demo',
     )
     window.history.pushState({}, '', '/')
+  })
+
+  it('marks every required field with aria-required for assistive technology', () => {
+    render(<RequestDemo />)
+    ;[
+      /^Full Name/,
+      /^Work Email/,
+      /^Phone Number/,
+      /^Company Name/,
+      /^Job Title/,
+      /^Country/,
+      /^Company Size/,
+      /^Project Timeline/,
+    ].forEach((label) => {
+      expect(screen.getByLabelText(label)).toHaveAttribute('aria-required', 'true')
+    })
+    expect(
+      screen.getByRole('checkbox', {
+        name: 'I agree to the Privacy Policy and consent to being contacted about this request.',
+      }),
+    ).toHaveAttribute('aria-required', 'true')
+  })
+
+  it('keeps every field reachable via keyboard tab order (no explicit negative tabIndex except the honeypot)', () => {
+    const { container } = render(<RequestDemo />)
+    const focusable = container.querySelectorAll('input, select, textarea, button')
+    focusable.forEach((element) => {
+      const tabIndex = element.getAttribute('tabindex')
+      if (element.getAttribute('name') === '_gotcha') {
+        expect(tabIndex).toBe('-1')
+      } else {
+        expect(tabIndex === null || tabIndex !== '-1').toBe(true)
+      }
+    })
   })
 
   describe('submission', () => {
@@ -203,7 +237,7 @@ describe('RequestDemo', () => {
       submitForm()
 
       expect(await screen.findByText('Invalid email address')).toBeInTheDocument()
-      expect(screen.getByLabelText('Full Name')).toHaveValue('Jane Doe')
+      expect(screen.getByLabelText(/^Full Name/)).toHaveValue('Jane Doe')
     })
 
     it('shows a retry-safe error banner with a fallback email on a network failure', async () => {
@@ -215,7 +249,7 @@ describe('RequestDemo', () => {
       submitForm()
 
       expect(await screen.findByText(/couldn't reach our server/)).toBeInTheDocument()
-      expect(screen.getByLabelText('Full Name')).toHaveValue('Jane Doe')
+      expect(screen.getByLabelText(/^Full Name/)).toHaveValue('Jane Doe')
     })
   })
 })
