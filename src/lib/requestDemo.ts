@@ -117,3 +117,84 @@ export function gradeFromScore(score: number): LeadGrade {
   return 'cold'
 }
 
+export type RequestDemoFormErrors = Partial<Record<keyof RequestDemoFormData, string>>
+
+export const REQUIRED_FIELD_ORDER: (keyof RequestDemoFormData)[] = [
+  'fullName',
+  'workEmail',
+  'phone',
+  'companyName',
+  'jobTitle',
+  'country',
+  'companySize',
+  'useCases',
+  'timeline',
+  'consent',
+]
+
+const NAME_PATTERN = /^[A-Za-z\s-]{2,80}$/
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export function validateRequestDemoForm(data: RequestDemoFormData): RequestDemoFormErrors {
+  const errors: RequestDemoFormErrors = {}
+
+  if (!NAME_PATTERN.test(data.fullName.trim())) {
+    errors.fullName = 'Enter a name using 2-80 letters, spaces, or hyphens.'
+  }
+
+  const workEmail = data.workEmail.trim()
+  if (workEmail === '') {
+    errors.workEmail = 'Work email is required.'
+  } else if (!EMAIL_PATTERN.test(workEmail)) {
+    errors.workEmail = 'Enter a valid email address.'
+  } else if (isBlockedEmailDomain(workEmail)) {
+    errors.workEmail = 'Please use your company email address.'
+  }
+
+  if (!isValidPhone(data.phone)) {
+    errors.phone = 'Enter a valid phone number (8-15 digits).'
+  }
+
+  const companyName = data.companyName.trim()
+  if (companyName.length < 2 || companyName.length > 120) {
+    errors.companyName = 'Company name must be 2-120 characters.'
+  }
+
+  const jobTitle = data.jobTitle.trim()
+  if (jobTitle.length < 2 || jobTitle.length > 80) {
+    errors.jobTitle = 'Job title must be 2-80 characters.'
+  }
+
+  if (data.country === '') {
+    errors.country = 'Select a country.'
+  }
+
+  if (data.companySize === '') {
+    errors.companySize = 'Select a company size.'
+  }
+
+  if (data.useCases.length === 0) {
+    errors.useCases = 'Select at least one use case.'
+  }
+
+  if (data.timeline === '') {
+    errors.timeline = 'Select a project timeline.'
+  }
+
+  if (!data.consent) {
+    errors.consent = 'You must agree before submitting.'
+  }
+
+  return errors
+}
+
+export function isRequestDemoFormValid(data: RequestDemoFormData): boolean {
+  return Object.keys(validateRequestDemoForm(data)).length === 0
+}
+
+export function firstInvalidField(
+  errors: RequestDemoFormErrors,
+): keyof RequestDemoFormData | undefined {
+  return REQUIRED_FIELD_ORDER.find((field) => errors[field] !== undefined)
+}
+

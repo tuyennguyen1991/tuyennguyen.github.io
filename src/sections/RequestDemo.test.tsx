@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { RequestDemo } from './RequestDemo'
 
@@ -51,6 +51,37 @@ describe('RequestDemo', () => {
   it('renders the submit button', () => {
     render(<RequestDemo />)
     expect(screen.getByRole('button', { name: 'Request Demo' })).toBeInTheDocument()
+  })
+
+  it('shows an inline error and focuses the first invalid field when submitted empty', () => {
+    render(<RequestDemo />)
+    fireEvent.submit(screen.getByRole('button', { name: 'Request Demo' }).closest('form')!)
+    expect(screen.getByLabelText('Full Name')).toHaveFocus()
+    expect(screen.getByLabelText('Full Name')).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('shows the exact spec error message for a blocklisted free-email domain', () => {
+    render(<RequestDemo />)
+    const emailInput = screen.getByLabelText('Work Email')
+    fireEvent.change(emailInput, { target: { value: 'jane@gmail.com' } })
+    fireEvent.blur(emailInput)
+    expect(screen.getByText('Please use your company email address.')).toBeInTheDocument()
+  })
+
+  it('blocks submit and shows an error when consent is unchecked', () => {
+    render(<RequestDemo />)
+    const consentCheckbox = screen.getByRole('checkbox', {
+      name: 'I agree to the Privacy Policy and consent to being contacted about this request.',
+    })
+    expect(consentCheckbox).not.toBeChecked()
+    fireEvent.submit(screen.getByRole('button', { name: 'Request Demo' }).closest('form')!)
+    expect(screen.getByText('You must agree before submitting.')).toBeInTheDocument()
+  })
+
+  it('shows an error when zero use cases are selected on submit', () => {
+    render(<RequestDemo />)
+    fireEvent.submit(screen.getByRole('button', { name: 'Request Demo' }).closest('form')!)
+    expect(screen.getByText('Select at least one use case.')).toBeInTheDocument()
   })
 })
 

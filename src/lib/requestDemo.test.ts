@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculateLeadScore,
+  firstInvalidField,
   gradeFromScore,
   getEmailDomain,
   isBlockedEmailDomain,
+  isRequestDemoFormValid,
   isValidPhone,
   normalizePhone,
+  validateRequestDemoForm,
 } from './requestDemo'
 import type { RequestDemoFormData } from '../content/requestDemo'
 
@@ -121,6 +124,58 @@ describe('gradeFromScore', () => {
 
   it('grades cold below 40', () => {
     expect(gradeFromScore(39)).toBe('cold')
+  })
+})
+
+describe('validateRequestDemoForm', () => {
+  it('returns no errors for a fully valid submission', () => {
+    expect(validateRequestDemoForm(baseFormData())).toEqual({})
+  })
+
+  it('flags a blocklisted free-email domain with the exact spec message', () => {
+    const errors = validateRequestDemoForm(baseFormData({ workEmail: 'jane@gmail.com' }))
+    expect(errors.workEmail).toBe('Please use your company email address.')
+  })
+
+  it('flags a malformed email differently from a blocked domain', () => {
+    const errors = validateRequestDemoForm(baseFormData({ workEmail: 'not-an-email' }))
+    expect(errors.workEmail).toBe('Enter a valid email address.')
+  })
+
+  it('flags an empty required field', () => {
+    const errors = validateRequestDemoForm(baseFormData({ country: '' }))
+    expect(errors.country).toBeDefined()
+  })
+
+  it('flags an unchecked consent box', () => {
+    const errors = validateRequestDemoForm(baseFormData({ consent: false }))
+    expect(errors.consent).toBeDefined()
+  })
+
+  it('flags zero selected use cases', () => {
+    const errors = validateRequestDemoForm(baseFormData({ useCases: [] }))
+    expect(errors.useCases).toBeDefined()
+  })
+})
+
+describe('isRequestDemoFormValid', () => {
+  it('returns true when there are no errors', () => {
+    expect(isRequestDemoFormValid(baseFormData())).toBe(true)
+  })
+
+  it('returns false when a required field is invalid', () => {
+    expect(isRequestDemoFormValid(baseFormData({ fullName: '' }))).toBe(false)
+  })
+})
+
+describe('firstInvalidField', () => {
+  it('returns the first field in visual order that has an error', () => {
+    const errors = validateRequestDemoForm(baseFormData({ fullName: '', country: '' }))
+    expect(firstInvalidField(errors)).toBe('fullName')
+  })
+
+  it('returns undefined when there are no errors', () => {
+    expect(firstInvalidField({})).toBeUndefined()
   })
 })
 
