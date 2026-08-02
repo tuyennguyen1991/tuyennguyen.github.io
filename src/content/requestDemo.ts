@@ -1,5 +1,7 @@
 export const FORMSPREE_ENDPOINT = 'https://formspree.io/f/mlgqyaql'
 
+export const DEMO_REQUEST_SUBJECT = 'New Demo Request'
+
 export const FREE_EMAIL_DOMAIN_BLOCKLIST = [
   'gmail.com',
   'yahoo.com',

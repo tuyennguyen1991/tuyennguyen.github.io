@@ -2,12 +2,14 @@ import {
   ACTIVE_SALES_TERRITORY_COUNTRIES,
   COMPETITOR_PLATFORMS,
   DECISION_MAKER_KEYWORDS,
+  DEMO_REQUEST_SUBJECT,
   FREE_EMAIL_DOMAIN_BLOCKLIST,
   LEAD_GRADE_THRESHOLDS,
   LEAD_SCORE_WEIGHTS,
   TARGET_ACCOUNT_DOMAINS,
   type LeadGrade,
   type RequestDemoFormData,
+  type RequestDemoPayload,
 } from '../content/requestDemo'
 
 export function getEmailDomain(email: string): string {
@@ -210,6 +212,47 @@ export function parseUtmParams(search: string): UtmParams {
     utm_source: params.get('utm_source'),
     utm_medium: params.get('utm_medium'),
     utm_campaign: params.get('utm_campaign'),
+  }
+}
+
+export function buildRequestDemoPayload(
+  data: RequestDemoFormData,
+  utm: UtmParams,
+  honeypot: string,
+  isRepeatRequest = false,
+): RequestDemoPayload {
+  const leadScore = calculateLeadScore(data, isRepeatRequest)
+  const leadGrade = gradeFromScore(leadScore)
+  const resolvedCurrentPlatform =
+    data.currentPlatform === 'Other' && data.currentPlatformOther.trim() !== ''
+      ? data.currentPlatformOther.trim()
+      : data.currentPlatform || null
+
+  return {
+    fullName: data.fullName.trim(),
+    workEmail: data.workEmail.trim(),
+    phone: normalizePhone(data.phone) ?? data.phone.trim(),
+    companyName: data.companyName.trim(),
+    jobTitle: data.jobTitle.trim(),
+    country: data.country,
+    companySize: data.companySize,
+    currentPlatform: resolvedCurrentPlatform,
+    dataVolume: data.dataVolume || null,
+    useCases: data.useCases,
+    timeline: data.timeline,
+    budgetRange: data.budgetRange || null,
+    preferredDemoAt: data.preferredDemoAt || null,
+    message: data.message.trim() === '' ? null : data.message.trim(),
+    referralSource: data.referralSource || null,
+    marketingOptIn: data.marketingOptIn,
+    consent: data.consent,
+    utm_source: utm.utm_source,
+    utm_medium: utm.utm_medium,
+    utm_campaign: utm.utm_campaign,
+    leadScore,
+    leadGrade,
+    _subject: DEMO_REQUEST_SUBJECT,
+    _gotcha: honeypot,
   }
 }
 

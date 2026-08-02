@@ -5,6 +5,8 @@ import {
   COUNTRY_OPTIONS,
   CURRENT_PLATFORM_OPTIONS,
   DATA_VOLUME_OPTIONS,
+  DEMO_REQUEST_SUBJECT,
+  FORMSPREE_ENDPOINT,
   REFERRAL_SOURCE_OPTIONS,
   TIMELINE_OPTIONS,
   USE_CASE_OPTIONS,
@@ -12,13 +14,16 @@ import {
   type UseCase,
 } from '../content/requestDemo'
 import {
+  buildRequestDemoPayload,
   firstInvalidField,
   parseUtmParams,
   validateRequestDemoForm,
   type UtmParams,
 } from '../lib/requestDemo'
 
-const EMAIL_SUBJECT = 'New Demo Request'
+const FALLBACK_CONTACT_EMAIL = 'tuyen.nguyen.engineer@gmail.com'
+
+type SubmissionState = 'idle' | 'submitting' | 'success' | 'error'
 
 const initialFormData: RequestDemoFormData = {
   fullName: '',
@@ -59,9 +64,12 @@ export function RequestDemo() {
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [honeypot, setHoneypot] = useState('')
   const [utm] = useState<UtmParams>(() => parseUtmParams(window.location.search))
+  const [submissionState, setSubmissionState] = useState<SubmissionState>('idle')
+  const [submissionError, setSubmissionError] = useState('')
 
   const errors = validateRequestDemoForm(formData)
   const isValid = Object.keys(errors).length === 0
+  const isSubmitting = submissionState === 'submitting'
 
   function shouldShowError(field: keyof RequestDemoFormData) {
     return (touched[field] || submitAttempted) && errors[field] !== undefined
@@ -96,7 +104,7 @@ export function RequestDemo() {
     document.getElementById(field)?.focus()
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSubmitAttempted(true)
 
@@ -105,6 +113,64 @@ export function RequestDemo() {
       focusField(invalidField)
       return
     }
+
+    setSubmissionState('submitting')
+    setSubmissionError('')
+
+    const payload = buildRequestDemoPayload(formData, utm, honeypot)
+
+    try {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (response.ok) {
+        setSubmissionState('success')
+        return
+      }
+
+      if (response.status === 422) {
+        const data: { errors?: { field?: string; message?: string }[] } = await response
+          .json()
+          .catch(() => ({}))
+        const message =
+          data.errors?.map((error) => error.message).filter(Boolean).join(' ') ||
+          'Some fields could not be validated. Please review your entries and try again.'
+        setSubmissionError(message)
+        setSubmissionState('error')
+        return
+      }
+
+      setSubmissionError(
+        `Something went wrong on our end. Please try again, or email us directly at ${FALLBACK_CONTACT_EMAIL}.`,
+      )
+      setSubmissionState('error')
+    } catch {
+      setSubmissionError(
+        `We couldn't reach our server. Please check your connection and try again, or email us directly at ${FALLBACK_CONTACT_EMAIL}.`,
+      )
+      setSubmissionState('error')
+    }
+  }
+
+  if (submissionState === 'success') {
+    return (
+      <section id="request-demo" className="mx-auto max-w-3xl px-6 py-20 text-center">
+        <h2 className="text-3xl font-semibold text-slate-900">Request a Demo</h2>
+        <p className="mt-4 text-slate-600">
+          Thanks, {formData.fullName.split(' ')[0] || 'there'}! Your request has been received. A
+          specialist will contact you within 1 business day to schedule your demo.
+        </p>
+        <a href="#hero" className="mt-6 inline-block text-sm font-semibold text-blue-600 hover:text-blue-700">
+          Back to homepage
+        </a>
+      </section>
+    )
   }
 
   return (
@@ -113,6 +179,11 @@ export function RequestDemo() {
       <p className="mt-4 text-slate-600">
         Tell us about your database needs and a specialist will follow up to schedule your demo.
       </p>
+      {submissionState === 'error' && (
+        <p role="alert" className="mt-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {submissionError}
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="mt-10 space-y-6" noValidate>
         <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="fullName">
@@ -518,21 +589,22 @@ export function RequestDemo() {
           />
         </div>
 
-        <input type="hidden" name="_subject" value={EMAIL_SUBJECT} />
+        <input type="hidden" name="_subject" value={DEMO_REQUEST_SUBJECT} />
         <input type="hidden" name="utm_source" value={utm.utm_source ?? ''} />
         <input type="hidden" name="utm_medium" value={utm.utm_medium ?? ''} />
         <input type="hidden" name="utm_campaign" value={utm.utm_campaign ?? ''} />
 
         <button
           type="submit"
-          aria-disabled={!isValid}
+          aria-disabled={!isValid || isSubmitting}
+          disabled={isSubmitting}
           className={
             isValid
-              ? 'rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700'
+              ? 'rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50'
               : 'rounded-full bg-blue-600 px-5 py-2 text-sm font-semibold text-white opacity-50'
           }
         >
-          Request Demo
+          {isSubmitting ? 'Sending...' : 'Request Demo'}
         </button>
       </form>
     </section>

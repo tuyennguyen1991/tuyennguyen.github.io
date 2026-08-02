@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildRequestDemoPayload,
   calculateLeadScore,
   firstInvalidField,
   gradeFromScore,
@@ -195,6 +196,52 @@ describe('parseUtmParams', () => {
       utm_medium: null,
       utm_campaign: null,
     })
+  })
+})
+
+describe('buildRequestDemoPayload', () => {
+  const noUtm = { utm_source: null, utm_medium: null, utm_campaign: null }
+
+  it('builds a payload with trimmed fields, computed score/grade, and hidden fields', () => {
+    const payload = buildRequestDemoPayload(baseFormData(), noUtm, '')
+    expect(payload.fullName).toBe('Jane Doe')
+    expect(payload.workEmail).toBe('jane@acme.com')
+    expect(payload.phone).toBe('+14155551234')
+    expect(payload.leadScore).toBe(0)
+    expect(payload.leadGrade).toBe('cold')
+    expect(payload._subject).toBe('New Demo Request')
+    expect(payload._gotcha).toBe('')
+  })
+
+  it('resolves currentPlatform to the free-text value when "Other" is selected', () => {
+    const payload = buildRequestDemoPayload(
+      baseFormData({ currentPlatform: 'Other', currentPlatformOther: 'Custom DB' }),
+      noUtm,
+      '',
+    )
+    expect(payload.currentPlatform).toBe('Custom DB')
+  })
+
+  it('passes through UTM params and honeypot value', () => {
+    const payload = buildRequestDemoPayload(
+      baseFormData(),
+      { utm_source: 'google', utm_medium: 'cpc', utm_campaign: 'demo' },
+      'bot-filled',
+    )
+    expect(payload.utm_source).toBe('google')
+    expect(payload.utm_medium).toBe('cpc')
+    expect(payload.utm_campaign).toBe('demo')
+    expect(payload._gotcha).toBe('bot-filled')
+  })
+
+  it('adds the repeat-request bonus to the computed score', () => {
+    const payload = buildRequestDemoPayload(
+      baseFormData({ jobTitle: 'VP', timeline: 'immediate' }),
+      noUtm,
+      '',
+      true,
+    )
+    expect(payload.leadScore).toBe(15 + 20 + 10)
   })
 })
 

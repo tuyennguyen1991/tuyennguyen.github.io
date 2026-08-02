@@ -1,6 +1,27 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { RequestDemo } from './RequestDemo'
+
+function fillRequiredFields() {
+  fireEvent.change(screen.getByLabelText('Full Name'), { target: { value: 'Jane Doe' } })
+  fireEvent.change(screen.getByLabelText('Work Email'), { target: { value: 'jane@acme.com' } })
+  fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '+14155551234' } })
+  fireEvent.change(screen.getByLabelText('Company Name'), { target: { value: 'Acme Corp' } })
+  fireEvent.change(screen.getByLabelText('Job Title'), { target: { value: 'Engineer' } })
+  fireEvent.change(screen.getByLabelText('Country'), { target: { value: 'US' } })
+  fireEvent.change(screen.getByLabelText('Company Size'), { target: { value: '1-50' } })
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Data migration' }))
+  fireEvent.change(screen.getByLabelText('Project Timeline'), { target: { value: 'researching' } })
+  fireEvent.click(
+    screen.getByRole('checkbox', {
+      name: 'I agree to the Privacy Policy and consent to being contacted about this request.',
+    }),
+  )
+}
+
+function submitForm() {
+  fireEvent.submit(screen.getByRole('button', { name: 'Request Demo' }).closest('form')!)
+}
 
 describe('RequestDemo', () => {
   it('renders the section with heading', () => {
@@ -111,6 +132,91 @@ describe('RequestDemo', () => {
       'demo',
     )
     window.history.pushState({}, '', '/')
+  })
+
+  describe('submission', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('POSTs to the Formspree endpoint with the computed lead score/grade and shows the confirmation on success', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ ok: true }),
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      render(<RequestDemo />)
+      fillRequiredFields()
+      submitForm()
+
+      await waitFor(() =>
+        expect(screen.getByText(/Your request has been received/)).toBeInTheDocument(),
+      )
+
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      const [url, options] = fetchMock.mock.calls[0]
+      expect(url).toBe('https://formspree.io/f/mlgqyaql')
+      expect(options.headers).toMatchObject({
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      })
+      const body = JSON.parse(options.body)
+      expect(body.leadScore).toBe(0)
+      expect(body.leadGrade).toBe('cold')
+      expect(body._gotcha).toBe('')
+    })
+
+    it('shows a loading state while the request is in flight', async () => {
+      let resolveFetch!: (value: unknown) => void
+      const fetchMock = vi.fn(
+        () =>
+          new Promise((resolve) => {
+            resolveFetch = resolve
+          }),
+      )
+      vi.stubGlobal('fetch', fetchMock)
+
+      render(<RequestDemo />)
+      fillRequiredFields()
+      submitForm()
+
+      expect(await screen.findByRole('button', { name: 'Sending...' })).toBeDisabled()
+
+      resolveFetch({ ok: true, status: 200, json: async () => ({ ok: true }) })
+      await waitFor(() =>
+        expect(screen.getByText(/Your request has been received/)).toBeInTheDocument(),
+      )
+    })
+
+    it('shows a non-blocking error banner and preserves entered data on a 422 response', async () => {
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 422,
+        json: async () => ({ errors: [{ field: 'workEmail', message: 'Invalid email address' }] }),
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      render(<RequestDemo />)
+      fillRequiredFields()
+      submitForm()
+
+      expect(await screen.findByText('Invalid email address')).toBeInTheDocument()
+      expect(screen.getByLabelText('Full Name')).toHaveValue('Jane Doe')
+    })
+
+    it('shows a retry-safe error banner with a fallback email on a network failure', async () => {
+      const fetchMock = vi.fn().mockRejectedValue(new TypeError('Network request failed'))
+      vi.stubGlobal('fetch', fetchMock)
+
+      render(<RequestDemo />)
+      fillRequiredFields()
+      submitForm()
+
+      expect(await screen.findByText(/couldn't reach our server/)).toBeInTheDocument()
+      expect(screen.getByLabelText('Full Name')).toHaveValue('Jane Doe')
+    })
   })
 })
 
