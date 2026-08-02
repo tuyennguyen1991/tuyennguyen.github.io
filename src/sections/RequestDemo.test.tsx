@@ -83,5 +83,34 @@ describe('RequestDemo', () => {
     fireEvent.submit(screen.getByRole('button', { name: 'Request Demo' }).closest('form')!)
     expect(screen.getByText('Select at least one use case.')).toBeInTheDocument()
   })
+
+  it('renders the honeypot field empty and visually hidden', () => {
+    const { container } = render(<RequestDemo />)
+    const honeypot = container.querySelector<HTMLInputElement>('input[name="_gotcha"]')
+    expect(honeypot).not.toBeNull()
+    expect(honeypot).toHaveValue('')
+    expect(honeypot?.parentElement).toHaveAttribute('aria-hidden', 'true')
+  })
+
+  it('renders the static _subject hidden field', () => {
+    const { container } = render(<RequestDemo />)
+    const subject = container.querySelector<HTMLInputElement>('input[name="_subject"]')
+    expect(subject).toHaveValue('New Demo Request')
+  })
+
+  it('captures UTM parameters from the URL on mount', () => {
+    window.history.pushState({}, '', '/?utm_source=google&utm_medium=cpc&utm_campaign=demo')
+    const { container } = render(<RequestDemo />)
+    expect(container.querySelector<HTMLInputElement>('input[name="utm_source"]')).toHaveValue(
+      'google',
+    )
+    expect(container.querySelector<HTMLInputElement>('input[name="utm_medium"]')).toHaveValue(
+      'cpc',
+    )
+    expect(container.querySelector<HTMLInputElement>('input[name="utm_campaign"]')).toHaveValue(
+      'demo',
+    )
+    window.history.pushState({}, '', '/')
+  })
 })
 

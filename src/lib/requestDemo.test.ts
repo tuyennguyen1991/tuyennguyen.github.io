@@ -8,6 +8,7 @@ import {
   isRequestDemoFormValid,
   isValidPhone,
   normalizePhone,
+  parseUtmParams,
   validateRequestDemoForm,
 } from './requestDemo'
 import type { RequestDemoFormData } from '../content/requestDemo'
@@ -176,6 +177,24 @@ describe('firstInvalidField', () => {
 
   it('returns undefined when there are no errors', () => {
     expect(firstInvalidField({})).toBeUndefined()
+  })
+})
+
+describe('parseUtmParams', () => {
+  it('extracts utm_source, utm_medium, and utm_campaign from a query string', () => {
+    expect(parseUtmParams('?utm_source=google&utm_medium=cpc&utm_campaign=demo')).toEqual({
+      utm_source: 'google',
+      utm_medium: 'cpc',
+      utm_campaign: 'demo',
+    })
+  })
+
+  it('returns null for missing params', () => {
+    expect(parseUtmParams('')).toEqual({
+      utm_source: null,
+      utm_medium: null,
+      utm_campaign: null,
+    })
   })
 })
 

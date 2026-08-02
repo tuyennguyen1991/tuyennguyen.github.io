@@ -11,7 +11,14 @@ import {
   type RequestDemoFormData,
   type UseCase,
 } from '../content/requestDemo'
-import { firstInvalidField, validateRequestDemoForm } from '../lib/requestDemo'
+import {
+  firstInvalidField,
+  parseUtmParams,
+  validateRequestDemoForm,
+  type UtmParams,
+} from '../lib/requestDemo'
+
+const EMAIL_SUBJECT = 'New Demo Request'
 
 const initialFormData: RequestDemoFormData = {
   fullName: '',
@@ -50,6 +57,8 @@ export function RequestDemo() {
   const [formData, setFormData] = useState<RequestDemoFormData>(initialFormData)
   const [touched, setTouched] = useState<Partial<Record<keyof RequestDemoFormData, boolean>>>({})
   const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [honeypot, setHoneypot] = useState('')
+  const [utm] = useState<UtmParams>(() => parseUtmParams(window.location.search))
 
   const errors = validateRequestDemoForm(formData)
   const isValid = Object.keys(errors).length === 0
@@ -495,6 +504,24 @@ export function RequestDemo() {
           />
           Keep me updated with product news and offers.
         </label>
+
+        <div aria-hidden="true" className="absolute h-px w-px overflow-hidden opacity-0">
+          <label htmlFor="_gotcha">Leave this field empty</label>
+          <input
+            id="_gotcha"
+            name="_gotcha"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={honeypot}
+            onChange={(event) => setHoneypot(event.target.value)}
+          />
+        </div>
+
+        <input type="hidden" name="_subject" value={EMAIL_SUBJECT} />
+        <input type="hidden" name="utm_source" value={utm.utm_source ?? ''} />
+        <input type="hidden" name="utm_medium" value={utm.utm_medium ?? ''} />
+        <input type="hidden" name="utm_campaign" value={utm.utm_campaign ?? ''} />
 
         <button
           type="submit"
