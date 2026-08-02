@@ -12,4 +12,5 @@ export const navItems: NavItem[] = [
   { id: 'ai-initiatives', label: 'AI & Automation' },
   { id: 'blog', label: 'Blog' },
   { id: 'contact', label: 'Contact' },
+  { id: 'request-demo', label: 'Request a Demo' },
 ]

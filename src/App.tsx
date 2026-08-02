@@ -8,6 +8,7 @@ import { Projects } from './sections/Projects'
 import { AIInitiatives } from './sections/AIInitiatives'
 import { Blog } from './sections/Blog'
 import { Contact } from './sections/Contact'
+import { RequestDemo } from './sections/RequestDemo'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <AIInitiatives />
         <Blog />
         <Contact />
+        <RequestDemo />
       </main>
       <Footer />
     </div>
