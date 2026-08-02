@@ -34,13 +34,13 @@ weights/thresholds (Section 7), and the `RequestDemoFormData` /
 `RequestDemoPayload` TypeScript types matching Section 8's payload shape.
 
 **Acceptance criteria:**
-- [ ] `FORMSPREE_ENDPOINT` exported once, value `https://formspree.io/f/mlgqyaql`.
-- [ ] All select-field option lists from Section 4 are exported as typed arrays/enums.
-- [ ] Scoring weights/thresholds from Section 7 are named constants (no magic numbers).
-- [ ] `RequestDemoFormData` type covers every field in Section 4; `RequestDemoPayload` matches Section 8 JSON shape.
+- [x] `FORMSPREE_ENDPOINT` exported once, value `https://formspree.io/f/mlgqyaql`.
+- [x] All select-field option lists from Section 4 are exported as typed arrays/enums.
+- [x] Scoring weights/thresholds from Section 7 are named constants (no magic numbers).
+- [x] `RequestDemoFormData` type covers every field in Section 4; `RequestDemoPayload` matches Section 8 JSON shape.
 
 **Verification:**
-- [ ] `npx tsc --noEmit` passes (types compile).
+- [x] `npx tsc --noEmit` passes (types compile).
 
 **Dependencies:** None
 
@@ -58,13 +58,13 @@ weights/thresholds (Section 7), and the `RequestDemoFormData` /
 using Task 1's constants.
 
 **Acceptance criteria:**
-- [ ] `isBlockedEmailDomain('x@gmail.com')` → `true`; company domain → `false`.
-- [ ] `normalizePhone` rejects unparseable numbers, normalizes valid ones.
-- [ ] `calculateLeadScore` sums weights per Section 7 table exactly.
-- [ ] `gradeFromScore` returns `'hot' | 'warm' | 'cold'` per thresholds (≥70 / 40–69 / <40).
+- [x] `isBlockedEmailDomain('x@gmail.com')` → `true`; company domain → `false`.
+- [x] `normalizePhone` rejects unparseable numbers, normalizes valid ones.
+- [x] `calculateLeadScore` sums weights per Section 7 table exactly.
+- [x] `gradeFromScore` returns `'hot' | 'warm' | 'cold'` per thresholds (≥70 / 40–69 / <40).
 
 **Verification:**
-- [ ] `npm test -- requestDemo` passes with unit tests covering each function's happy path + one edge case.
+- [x] `npm test -- requestDemo` passes with unit tests covering each function's happy path + one edge case.
 
 **Dependencies:** Task 1
 
@@ -76,9 +76,9 @@ using Task 1's constants.
 ---
 
 ### Checkpoint: Foundation
-- [ ] `npm test`, `npx tsc --noEmit` pass
-- [ ] No React/component code yet — pure logic only
-- [ ] Review with human before proceeding to Phase 2
+- [x] `npm test`, `npx tsc --noEmit` pass
+- [x] No React/component code yet — pure logic only
+- [x] Review with human before proceeding to Phase 2
 
 ---
 
@@ -93,13 +93,13 @@ section-wrapper/button conventions for heading/CTA). No submit handler,
 no validation yet — just state + rendering.
 
 **Acceptance criteria:**
-- [ ] All 17 visible fields render with visible `<label>`s.
-- [ ] Section wrapper/heading style matches `Contact.tsx` conventions.
-- [ ] Shared input/select/textarea class constant used for every field (no per-field one-off styles).
+- [x] All 17 visible fields render with visible `<label>`s.
+- [x] Section wrapper/heading style matches `Contact.tsx` conventions.
+- [x] Shared input/select/textarea class constant used for every field (no per-field one-off styles).
 
 **Verification:**
-- [ ] Test passes: `npm test -- RequestDemo` (asserts every field label present).
-- [ ] Manual check: `npm run dev`, section renders standalone with no console errors.
+- [x] Test passes: `npm test -- RequestDemo` (asserts every field label present).
+- [x] Manual check: `npm run dev`, section renders standalone with no console errors.
 
 **Dependencies:** Checkpoint: Foundation
 
@@ -122,13 +122,13 @@ since that would also block the click-to-validate/focus behavior required
 by spec Section 11's acceptance criteria.)
 
 **Acceptance criteria:**
-- [ ] Submit button is visually dimmed while any required field is empty/invalid or consent unchecked.
-- [ ] Blocklisted work-email domain shows the exact inline error from Section 5.
-- [ ] Consent unchecked → submit blocked, no network call attempted.
-- [ ] Blocked submit focuses the first invalid field.
+- [x] Submit button is visually dimmed while any required field is empty/invalid or consent unchecked.
+- [x] Blocklisted work-email domain shows the exact inline error from Section 5.
+- [x] Consent unchecked → submit blocked, no network call attempted.
+- [x] Blocked submit focuses the first invalid field.
 
 **Verification:**
-- [ ] Test passes: `npm test -- RequestDemo` (new cases: disabled state, inline errors, focus-on-invalid, consent gate with fetch-not-called assertion).
+- [x] Test passes: `npm test -- RequestDemo` (new cases: disabled state, inline errors, focus-on-invalid, consent gate with fetch-not-called assertion).
 
 **Dependencies:** Task 3
 
@@ -147,12 +147,12 @@ exact field name required by Formspree), `_subject`, UTM capture from
 wired in Task 6) into the form's internal payload state.
 
 **Acceptance criteria:**
-- [ ] `_gotcha` input is present, empty by default, visually hidden but present in the DOM/payload.
-- [ ] `_subject` is a static string per Section 4.
-- [ ] UTM fields are parsed from `window.location.search` on mount (`utm_source`, `utm_medium`, `utm_campaign`), default `null` if absent.
+- [x] `_gotcha` input is present, empty by default, visually hidden but present in the DOM/payload.
+- [x] `_subject` is a static string per Section 4.
+- [x] UTM fields are parsed from `window.location.search` on mount (`utm_source`, `utm_medium`, `utm_campaign`), default `null` if absent.
 
 **Verification:**
-- [ ] Test passes: `npm test -- RequestDemo` (asserts `_gotcha` present+empty, UTM parsed from a mocked URL).
+- [x] Test passes: `npm test -- RequestDemo` (asserts `_gotcha` present+empty, UTM parsed from a mocked URL).
 
 **Dependencies:** Task 4
 
@@ -172,14 +172,14 @@ confirmation panel on success, show a non-blocking error banner (preserving
 entered data) on `422` or network failure.
 
 **Acceptance criteria:**
-- [ ] Submit button shows loading state and is disabled while the request is in flight.
-- [ ] On success (`res.ok`), form is replaced with the confirmation copy from Section 6.
-- [ ] On `422`, an error banner is shown, entered field values are preserved, retry is possible.
-- [ ] On network failure, a retry-safe banner with a fallback contact email is shown.
-- [ ] Payload includes `leadScore`/`leadGrade` computed via Task 2.
+- [x] Submit button shows loading state and is disabled while the request is in flight.
+- [x] On success (`res.ok`), form is replaced with the confirmation copy from Section 6.
+- [x] On `422`, an error banner is shown, entered field values are preserved, retry is possible.
+- [x] On network failure, a retry-safe banner with a fallback contact email is shown.
+- [x] Payload includes `leadScore`/`leadGrade` computed via Task 2.
 
 **Verification:**
-- [ ] Test passes: `npm test -- RequestDemo` (three mocked-fetch cases: success / 422 / network error — `global.fetch` always mocked, never real).
+- [x] Test passes: `npm test -- RequestDemo` (three mocked-fetch cases: success / 422 / network error — `global.fetch` always mocked, never real).
 
 **Dependencies:** Task 5
 
@@ -191,9 +191,9 @@ entered data) on `422` or network failure.
 ---
 
 ### Checkpoint: Form Component
-- [ ] `npm test`, `npm run lint`, `npx tsc --noEmit` all pass
-- [ ] Full form usable end-to-end in `npm run dev` (manual mocked/test submission)
-- [ ] Review with human before proceeding to Phase 3
+- [x] `npm test`, `npm run lint`, `npx tsc --noEmit` all pass
+- [x] Full form usable end-to-end in `npm run dev` (manual mocked/test submission)
+- [x] Review with human before proceeding to Phase 3
 
 ---
 
@@ -205,12 +205,12 @@ entered data) on `422` or network failure.
 `src/content/navigation.ts` and mount `<RequestDemo />` in `App.tsx`.
 
 **Acceptance criteria:**
-- [ ] Nav shows a "Request a Demo" link that scroll-links to `#request-demo`.
-- [ ] Section appears in `App.tsx`'s `<main>` in a sensible position (after `Contact`, unless directed otherwise).
+- [x] Nav shows a "Request a Demo" link that scroll-links to `#request-demo`.
+- [x] Section appears in `App.tsx`'s `<main>` in a sensible position (after `Contact`, unless directed otherwise).
 
 **Verification:**
-- [ ] Test passes: `npm test -- Nav` (existing Nav test still covers the new item, or extend it).
-- [ ] Manual check: click the nav link, confirm smooth-scroll to the section.
+- [x] Test passes: `npm test -- Nav` (existing Nav test still covers the new item, or extend it).
+- [x] Manual check: click the nav link, confirm smooth-scroll to the section.
 
 **Dependencies:** Checkpoint: Form Component
 
@@ -228,13 +228,13 @@ keyboard-only completion, screen-reader-announced errors) and responsive
 layout at 375/768/1440px, per spec Section 10.
 
 **Acceptance criteria:**
-- [ ] Every field reachable and operable via keyboard only (Tab/Shift+Tab, Enter to submit).
-- [ ] Inline errors use `aria-invalid`/`aria-describedby` or equivalent so screen readers announce them.
-- [ ] No horizontal scroll or overlapping/clipped content at 375/768/1440px.
+- [x] Every field reachable and operable via keyboard only (Tab/Shift+Tab, Enter to submit).
+- [x] Inline errors use `aria-invalid`/`aria-describedby` or equivalent so screen readers announce them.
+- [x] No horizontal scroll or overlapping/clipped content at 375/768/1440px.
 
 **Verification:**
-- [ ] Manual check: keyboard-only walkthrough of the full form.
-- [ ] Manual check: resize browser to the three breakpoints.
+- [x] Manual check: keyboard-only walkthrough of the full form.
+- [x] Manual check: resize browser to the three breakpoints.
 
 **Dependencies:** Task 7
 
@@ -246,9 +246,9 @@ layout at 375/768/1440px, per spec Section 10.
 ---
 
 ### Checkpoint: Complete
-- [ ] All Acceptance Criteria in spec Section 11 verified manually or via test
-- [ ] `npm run build && npm test && npm run lint` green
-- [ ] Ready for human final review
+- [x] All Acceptance Criteria in spec Section 11 verified manually or via test
+- [x] `npm run build && npm test && npm run lint` green
+- [x] Ready for human final review
 
 ---
 
