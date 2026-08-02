@@ -1,6 +1,5 @@
 import {
   ACTIVE_SALES_TERRITORY_COUNTRIES,
-  COMPETITOR_PLATFORMS,
   DECISION_MAKER_KEYWORDS,
   DEMO_REQUEST_SUBJECT,
   FREE_EMAIL_DOMAIN_BLOCKLIST,
@@ -44,20 +43,12 @@ function isLargeCompanySize(companySize: string): boolean {
   return companySize === '201-1000' || companySize === '1000+'
 }
 
-function isHighDataVolume(dataVolume: string): boolean {
-  return dataVolume === '1-10TB' || dataVolume === '>10TB'
-}
-
 function isUrgentTimeline(timeline: string): boolean {
   return timeline === 'immediate' || timeline === '1-3m'
 }
 
 function isBudgetProvidedAndAboveMin(budgetRange: string): boolean {
   return budgetRange !== '' && budgetRange !== 'Not disclosed' && budgetRange !== '<$10k'
-}
-
-function isCompetitorPlatform(currentPlatform: string): boolean {
-  return COMPETITOR_PLATFORMS.includes(currentPlatform)
 }
 
 function isActiveTerritory(country: string): boolean {
@@ -84,17 +75,11 @@ export function calculateLeadScore(
   if (isLargeCompanySize(data.companySize)) {
     score += LEAD_SCORE_WEIGHTS.largeCompanySize
   }
-  if (isHighDataVolume(data.dataVolume)) {
-    score += LEAD_SCORE_WEIGHTS.highDataVolume
-  }
   if (isUrgentTimeline(data.timeline)) {
     score += LEAD_SCORE_WEIGHTS.urgentTimeline
   }
   if (isBudgetProvidedAndAboveMin(data.budgetRange)) {
     score += LEAD_SCORE_WEIGHTS.budgetProvided
-  }
-  if (isCompetitorPlatform(data.currentPlatform)) {
-    score += LEAD_SCORE_WEIGHTS.competitorPlatform
   }
   if (isActiveTerritory(data.country)) {
     score += LEAD_SCORE_WEIGHTS.activeTerritory
@@ -129,7 +114,6 @@ export const REQUIRED_FIELD_ORDER: (keyof RequestDemoFormData)[] = [
   'jobTitle',
   'country',
   'companySize',
-  'useCases',
   'timeline',
   'consent',
 ]
@@ -173,10 +157,6 @@ export function validateRequestDemoForm(data: RequestDemoFormData): RequestDemoF
 
   if (data.companySize === '') {
     errors.companySize = 'Select a company size.'
-  }
-
-  if (data.useCases.length === 0) {
-    errors.useCases = 'Select at least one use case.'
   }
 
   if (data.timeline === '') {
@@ -223,10 +203,28 @@ export function buildRequestDemoPayload(
 ): RequestDemoPayload {
   const leadScore = calculateLeadScore(data, isRepeatRequest)
   const leadGrade = gradeFromScore(leadScore)
-  const resolvedCurrentPlatform =
-    data.currentPlatform === 'Other' && data.currentPlatformOther.trim() !== ''
-      ? data.currentPlatformOther.trim()
-      : data.currentPlatform || null
+  const resolvedCustomerIndustry =
+    data.customerIndustry === 'Other' && data.customerIndustryOther.trim() !== ''
+      ? data.customerIndustryOther.trim()
+      : data.customerIndustry || null
+  const resolvedSolutionType =
+    data.solutionType === 'Other' && data.solutionTypeOther.trim() !== ''
+      ? data.solutionTypeOther.trim()
+      : data.solutionType || null
+  const resolvedIntegrationsNeeded: string[] = data.integrationsNeeded.includes('Other')
+    ? [
+        ...data.integrationsNeeded.filter((item) => item !== 'Other'),
+        ...(data.integrationsNeededOther.trim() !== '' ? [data.integrationsNeededOther.trim()] : []),
+      ]
+    : data.integrationsNeeded
+  const resolvedSpecialRequirements: string[] = data.specialRequirements.includes('Other')
+    ? [
+        ...data.specialRequirements.filter((item) => item !== 'Other'),
+        ...(data.specialRequirementsOther.trim() !== ''
+          ? [data.specialRequirementsOther.trim()]
+          : []),
+      ]
+    : data.specialRequirements
 
   return {
     fullName: data.fullName.trim(),
@@ -236,9 +234,6 @@ export function buildRequestDemoPayload(
     jobTitle: data.jobTitle.trim(),
     country: data.country,
     companySize: data.companySize,
-    currentPlatform: resolvedCurrentPlatform,
-    dataVolume: data.dataVolume || null,
-    useCases: data.useCases,
     timeline: data.timeline,
     budgetRange: data.budgetRange || null,
     preferredDemoAt: data.preferredDemoAt || null,
@@ -246,6 +241,15 @@ export function buildRequestDemoPayload(
     referralSource: data.referralSource || null,
     marketingOptIn: data.marketingOptIn,
     consent: data.consent,
+    customerIndustry: resolvedCustomerIndustry,
+    projectName: data.projectName.trim() === '' ? null : data.projectName.trim(),
+    solutionType: resolvedSolutionType,
+    currentSituation: data.currentSituation.trim() === '' ? null : data.currentSituation.trim(),
+    businessChallenges:
+      data.businessChallenges.trim() === '' ? null : data.businessChallenges.trim(),
+    objectives: data.objectives.trim() === '' ? null : data.objectives.trim(),
+    integrationsNeeded: resolvedIntegrationsNeeded,
+    specialRequirements: resolvedSpecialRequirements,
     utm_source: utm.utm_source,
     utm_medium: utm.utm_medium,
     utm_campaign: utm.utm_campaign,

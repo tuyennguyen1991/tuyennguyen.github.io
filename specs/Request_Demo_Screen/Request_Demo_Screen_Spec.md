@@ -1,9 +1,9 @@
 ---
 Screen ID: SCR-DEMO-REQ-01
 Screen Name: Request a Demo
-Department: DB (Database Solutions) Sales
-Owner: DB Department Sales Team
-Version: v1.1
+Department: Business Department (Sales)
+Owner: Business Department (Sales)
+Version: v1.3
 Status: Draft
 Integration: Formspree (static-site form backend)
 Formspree Endpoint: https://formspree.io/f/mlgqyaql
@@ -28,6 +28,25 @@ server.
 > As a DB department sales rep, I want every demo request delivered to my
 > inbox (via Formspree) with enough detail and a computed priority signal, so
 > that I can prioritize follow-up and skip low-quality/spam submissions.
+
+> As a prospect with a complex, custom-software or logistics/bidding-platform
+> need (e.g. an enterprise evaluating a bespoke system, not just a database
+> demo), I want to optionally describe my current situation, challenges,
+> objectives, and technical/integration requirements in the same form, so
+> that the sales/solutioning team receives enough context to scope a
+> meaningful first conversation instead of a generic demo slot.
+
+This v1.2 update added an optional **Project & Solution Details** block
+(Section 4, fields 15–22 as of v1.3) so the same form can capture richer
+enterprise intake information — modeled on real custom-software/logistics
+engagements (e.g. a manufacturing/trading customer needing a logistics +
+bidding management platform) — without adding friction to the simple,
+existing DB demo-request flow. These fields are entirely optional.
+
+v1.3 removes three database-specific fields ("Current Database / Platform",
+"Data Volume (approx.)", "Primary Use Case / Interest") that no longer fit
+the broadened scope now that this form also serves non-database, custom-
+software/logistics prospects — see Section 4 for details.
 
 ## 2. Scope
 
@@ -73,20 +92,36 @@ contract only.
 | 5 | Job Title | text | Yes | 2–80 chars | Used for decision-maker scoring |
 | 6 | Country | select | Yes | ISO country list | |
 | 7 | Company Size | select | Yes | Ranges: 1–50, 51–200, 201–1000, 1000+ | |
-| 8 | Current Database / Platform | select + "Other" free text | No | Options: Oracle, SQL Server, MySQL/PostgreSQL, MongoDB, Legacy/On-prem, None/Greenfield, Other | Sales context |
-| 9 | Data Volume (approx.) | select | No | <100GB, 100GB–1TB, 1–10TB, >10TB, Not sure | |
-| 10 | Primary Use Case / Interest | multi-select | Yes | e.g. Data migration, Performance tuning, Cloud migration, HA/DR, New system build, Other (min 1 selection) | Drives demo agenda |
-| 11 | Project Timeline | select | Yes | Immediate (0–1 month), 1–3 months, 3–6 months, 6+ months, Just researching | Urgency scoring input |
-| 12 | Budget Range | select | No | <$10k, $10k–$50k, $50k–$200k, >$200k, Not disclosed | Optional — do not block submission if omitted |
-| 13 | Preferred Demo Date/Time | date/time picker | No | Must be a future business day/time in visitor's timezone | Optional convenience field |
-| 14 | Message / Requirements | textarea | No | Max 1000 chars | Free text, spam-filtered |
-| 15 | How did you hear about us? | select | No | Search, Referral, Event, Social, Ad, Other | Marketing attribution |
-| 16 | Consent (Privacy/GDPR) | checkbox | Yes | Must be checked to submit | Blocks submit if unchecked |
-| 17 | Marketing opt-in | checkbox | No | Unchecked by default | Separate from required consent |
-| 18 (hidden) | `_subject` | hidden field | No | Static string, e.g. "New Demo Request" | Formspree native — sets email subject |
-| 19 (hidden) | UTM parameters | hidden fields | No | Captured from URL query string | Attribution, included in payload |
-| 20 (hidden) | `_gotcha` | hidden text input | No | Must remain empty | Formspree's built-in honeypot field name — do **not** rename |
-| 21 (hidden) | `leadScore` / `leadGrade` | hidden fields | No | Computed client-side (see Section 7) | Sent so the rep sees priority directly in the Formspree email/dashboard row |
+| 8 | Project Timeline | select | Yes | Immediate (0–1 month), 1–3 months, 3–6 months, 6+ months, Just researching | Urgency scoring input |
+| 9 | Budget Range | select | No | <$10k, $10k–$50k, $50k–$200k, >$200k, Not disclosed | Optional — do not block submission if omitted |
+| 10 | Preferred Demo Date/Time | date/time picker | No | Must be a future business day/time in visitor's timezone | Optional convenience field |
+| 11 | Message / Requirements | textarea | No | Max 1000 chars | Free text, spam-filtered |
+| 12 | How did you hear about us? | select | No | Search, Referral, Event, Social, Ad, Other | Marketing attribution |
+| 13 | Consent (Privacy/GDPR) | checkbox | Yes | Must be checked to submit | Blocks submit if unchecked |
+| 14 | Marketing opt-in | checkbox | No | Unchecked by default | Separate from required consent |
+| 15 | Customer Industry | select + "Other" free text | No | Options: Manufacturing, Automotive, Trading & Logistics, Retail, Technology, Financial Services, Healthcare, Other | Broader enterprise context beyond company size/platform |
+| 16 | Project Name | text | No | Max 120 chars | Internal working name, if the prospect already has one |
+| 17 | Solution Type of Interest | select + "Other" free text | No | Options: Custom Software Development, Logistics Management, Bidding/Procurement Management, Workflow/Approval Automation, Database Solution, Other | Higher-level solution category the prospect is evaluating |
+| 18 | Current Situation | textarea | No | Max 2000 chars | Describes current manual/legacy process (e.g. email/spreadsheet-based coordination) |
+| 19 | Business Challenges | textarea | No | Max 2000 chars | Pain points prompting the request |
+| 20 | Objectives | textarea | No | Max 2000 chars | Desired outcomes of the new system |
+| 21 | Integrations Needed | multi-select + "Other" free text | No | Options: SharePoint, SSO, MFA, ERP, WMS, Existing internal approval systems, Other | Systems the new solution must connect to |
+| 22 | Special Requirements | multi-select + "Other" free text | No | Options: Document centralization, Vendor/external portal access, Quote encryption & secure bidding, Dashboard/KPI reporting, Audit logging & security monitoring, Role-based access control, SSO/MFA authentication, Multi-language (EN/VI) support, Other | Non-functional/compliance asks |
+| 23 (hidden) | `_subject` | hidden field | No | Static string, e.g. "New Demo Request" | Formspree native — sets email subject |
+| 24 (hidden) | UTM parameters | hidden fields | No | Captured from URL query string | Attribution, included in payload |
+| 25 (hidden) | `_gotcha` | hidden text input | No | Must remain empty | Formspree's built-in honeypot field name — do **not** rename |
+| 26 (hidden) | `leadScore` / `leadGrade` | hidden fields | No | Computed client-side (see Section 7) | Sent so the rep sees priority directly in the Formspree email/dashboard row |
+
+**Removed in this update:** "Current Database / Platform", "Data Volume
+(approx.)", and "Primary Use Case / Interest" (formerly fields #8–10) have
+been dropped — the newer, broader "Solution Type of Interest" (#17) and
+free-text "Current Situation"/"Objectives" fields (#18, #20) now cover this
+intent without forcing a database-specific choice.
+
+Fields 15–22 (**Project & Solution Details**) remain entirely optional and
+are not part of any required-field validation, lead-scoring formula
+(Section 7), or acceptance criteria beyond "must not block submission when
+empty" and "must be included in the payload when provided" (see Section 11).
 
 ## 5. Validation Rules
 
@@ -95,7 +130,7 @@ contract only.
   application backend, **Formspree is the only server-side layer**; it
   performs its own minimal validation (e.g. malformed email → `422`) but does
   **not** enforce our business rules (free-domain blocklist, phone format,
-  consent, use-case selection) — those are client-side only in v1. See
+  consent) — those are client-side only in v1. See
   Section 12 for the residual-risk discussion.
 - Work Email: reject if domain is on the free-email blocklist → show inline
   error "Please use your company email address."
@@ -163,12 +198,17 @@ payload so they're visible directly in the notification email/dashboard row.
 | Work email domain matches a known target-account domain list | +20 |
 | Job Title matches decision-maker keywords (Director, VP, Head, CTO, CIO, Manager, Owner, Founder) | +15 |
 | Company Size ≥ 201 | +10 |
-| Data Volume ≥ 1TB | +10 |
 | Project Timeline = "Immediate" or "1–3 months" | +20 |
 | Budget Range provided and ≥ $10k | +15 |
-| Current Database/Platform is a known migration-target competitor product | +10 |
 | Country is in the department's active sales territory list | +5 |
 | Preferred Demo Date/Time provided | +5 |
+
+**Removed in this update:** the "Data Volume ≥ 1TB" (+10) and "Current
+Database/Platform is a known migration-target competitor product" (+10)
+criteria are dropped along with their source fields; maximum achievable
+score (excluding the repeat-request bonus) decreases accordingly. This is a
+scoring-formula change and must be re-implemented in `calculateLeadScore`
+(currently in `src/lib/requestDemo.ts`) alongside the field removal.
 
 **Grading (informational only in v1 — no automated routing):**
 - **Hot (≥70):** flagged `leadGrade: "hot"` in the payload/email subject
@@ -197,9 +237,6 @@ Request body (field names match Section 4 order):
   "jobTitle": "string",
   "country": "string (ISO-3166 alpha-2)",
   "companySize": "1-50 | 51-200 | 201-1000 | 1000+",
-  "currentPlatform": "string | null",
-  "dataVolume": "string | null",
-  "useCases": ["string"],
   "timeline": "immediate | 1-3m | 3-6m | 6m+ | researching",
   "budgetRange": "string | null",
   "preferredDemoAt": "ISO-8601 datetime | null",
@@ -207,6 +244,14 @@ Request body (field names match Section 4 order):
   "referralSource": "string | null",
   "marketingOptIn": "boolean",
   "consent": "boolean (must be true)",
+  "customerIndustry": "string | null",
+  "projectName": "string | null",
+  "solutionType": "string | null",
+  "currentSituation": "string | null",
+  "businessChallenges": "string | null",
+  "objectives": "string | null",
+  "integrationsNeeded": ["string"],
+  "specialRequirements": ["string"],
   "utm_source": "string | null",
   "utm_medium": "string | null",
   "utm_campaign": "string | null",
@@ -216,6 +261,11 @@ Request body (field names match Section 4 order):
   "_gotcha": "string (must remain empty)"
 }
 ```
+
+Fields `customerIndustry` through `specialRequirements` (Section 4, #15–22)
+are all optional; send `null` (single-value fields) or `[]` (multi-select
+fields) when the prospect leaves them blank — never omit the keys, so
+Formspree/downstream consumers see a consistent shape.
 
 Success response (`200 OK`):
 ```json
@@ -237,13 +287,13 @@ retry-safe failure per Section 6, step 6.
 ## 9. Downstream Integration
 
 - Formspree delivers each submission by email to the addresses configured
-  in the Formspree dashboard for this form (DB department sales
+  in the Formspree dashboard for this form (Business Department (Sales)
   distribution list) — no application code required.
 - Optional, no-code Formspree integrations (Zapier, Slack, Google Sheets,
   Mailchimp) can be enabled from the Formspree dashboard to push submissions
   to a spreadsheet/CRM/Slack channel; **configuring which integrations are
-  enabled is an operational task owned by the DB sales team**, not part of
-  this codebase.
+  enabled is an operational task owned by the Business Department (Sales)**,
+  not part of this codebase.
 - There is no automated territory-based rep assignment or CRM Lead-object
   creation in v1 (that requires either a paid Formspree plan's Zapier tier or
   a real backend) — tracked as a Phase 2 item in Section 12.
@@ -311,6 +361,18 @@ retry-safe failure per Section 6, step 6.
 - [ ] Given the site is built (`npm run build`), then the Formspree endpoint
       is not accidentally exposed as an editable/config value elsewhere and
       matches the one specified in this document.
+- [ ] Given all Project & Solution Details fields (#15–22) are left empty,
+      when the user submits an otherwise-valid form, then submission succeeds
+      exactly as before v1.2 (these fields never block submission).
+- [ ] Given one or more Project & Solution Details fields are filled in, when
+      the form is submitted, then their values are included in the payload
+      under the field names defined in Section 8, without altering
+      `leadScore`/`leadGrade` (Section 7 is unchanged in v1.2).
+- [ ] Given "Current Database / Platform", "Data Volume (approx.)", and
+      "Primary Use Case / Interest" have been removed, when the form is
+      rendered, then none of these fields, their options, or their former
+      payload keys (`currentPlatform`, `dataVolume`, `useCases`) appear
+      anywhere in the UI or the submitted JSON.
 
 ## 12. Implementation Notes (inherits `specs/personal-website/spec.md`)
 
@@ -386,11 +448,31 @@ field rather than inventing per-field styles.
    configures the Zap?
 4. Is Formspree's built-in reCAPTCHA sufficient at launch, or should we also
    keep the client-side honeypot as a second layer (current spec keeps both)?
-5. Confirm the exact `leadScore`/`leadGrade` thresholds and target-account/
-   competitor-platform lists from Section 7 with sales/marketing before
-   build — these remain a client-side, non-authoritative triage hint given
-   the static-site constraint.
+5. Confirm the exact `leadScore`/`leadGrade` thresholds and target-account
+   domain list from Section 7 with sales/marketing before build — these
+   remain a client-side, non-authoritative triage hint given the
+   static-site constraint. (The former competitor-platform criterion no
+   longer applies since "Current Database / Platform" was removed.)
 6. Formspree's free-plan monthly submission cap could not be officially
    confirmed (third-party sources suggest ~50/month) — confirm actual plan
    tier and cap before launch to avoid silently dropped leads once the cap is
    hit.
+7. Should the Project & Solution Details fields (#15–22) contribute
+   additional points to Lead Quality Scoring (Section 7) — e.g. a bonus for
+   "detailed enterprise context provided"? Not added in this update to
+   avoid changing the already-implemented scoring formula without explicit
+   confirmation.
+8. ~~The current Department/Owner header metadata predates the broader
+   custom-software/logistics use case...~~ **Resolved (v1.2):** Department
+   and Owner are now `Business Department (Sales)`, reflecting the wider
+   scope introduced by fields #15–22 (renumbered in v1.3).
+9. Should any of the new select/multi-select option lists (Customer
+   Industry, Solution Type, Integrations Needed, Special Requirements) be
+   confirmed/finalized with sales or solutioning teams before build, similar
+   to the target-account list in Question 5?
+10. Now that "Current Database / Platform" and "Data Volume (approx.)" are
+    removed, does the codebase's existing implementation
+    (`src/sections/RequestDemo.tsx`, `src/lib/requestDemo.ts`,
+    `src/content/requestDemo.ts`) need to be updated in the same pass, or
+    tracked as a separate follow-up task? (This spec update does not modify
+    code by itself.)

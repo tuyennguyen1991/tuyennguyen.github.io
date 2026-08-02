@@ -3,15 +3,17 @@ import {
   BUDGET_RANGE_OPTIONS,
   COMPANY_SIZE_OPTIONS,
   COUNTRY_OPTIONS,
-  CURRENT_PLATFORM_OPTIONS,
-  DATA_VOLUME_OPTIONS,
+  CUSTOMER_INDUSTRY_OPTIONS,
   DEMO_REQUEST_SUBJECT,
   FORMSPREE_ENDPOINT,
+  INTEGRATIONS_NEEDED_OPTIONS,
   REFERRAL_SOURCE_OPTIONS,
+  SOLUTION_TYPE_OPTIONS,
+  SPECIAL_REQUIREMENTS_OPTIONS,
   TIMELINE_OPTIONS,
-  USE_CASE_OPTIONS,
+  type IntegrationNeeded,
   type RequestDemoFormData,
-  type UseCase,
+  type SpecialRequirement,
 } from '../content/requestDemo'
 import {
   buildRequestDemoPayload,
@@ -33,10 +35,6 @@ const initialFormData: RequestDemoFormData = {
   jobTitle: '',
   country: '',
   companySize: '',
-  currentPlatform: '',
-  currentPlatformOther: '',
-  dataVolume: '',
-  useCases: [],
   timeline: '',
   budgetRange: '',
   preferredDemoAt: '',
@@ -44,6 +42,18 @@ const initialFormData: RequestDemoFormData = {
   referralSource: '',
   marketingOptIn: false,
   consent: false,
+  customerIndustry: '',
+  customerIndustryOther: '',
+  projectName: '',
+  solutionType: '',
+  solutionTypeOther: '',
+  currentSituation: '',
+  businessChallenges: '',
+  objectives: '',
+  integrationsNeeded: [],
+  integrationsNeededOther: '',
+  specialRequirements: [],
+  specialRequirementsOther: '',
 }
 
 const labelClass = 'block text-sm font-medium text-slate-700'
@@ -86,21 +96,25 @@ export function RequestDemo() {
     setTouched((prev) => ({ ...prev, [field]: true }))
   }
 
-  function toggleUseCase(useCase: UseCase) {
-    setTouched((prev) => ({ ...prev, useCases: true }))
+  function toggleIntegrationNeeded(value: IntegrationNeeded) {
     setFormData((prev) => ({
       ...prev,
-      useCases: prev.useCases.includes(useCase)
-        ? prev.useCases.filter((existing) => existing !== useCase)
-        : [...prev.useCases, useCase],
+      integrationsNeeded: prev.integrationsNeeded.includes(value)
+        ? prev.integrationsNeeded.filter((existing) => existing !== value)
+        : [...prev.integrationsNeeded, value],
+    }))
+  }
+
+  function toggleSpecialRequirement(value: SpecialRequirement) {
+    setFormData((prev) => ({
+      ...prev,
+      specialRequirements: prev.specialRequirements.includes(value)
+        ? prev.specialRequirements.filter((existing) => existing !== value)
+        : [...prev.specialRequirements, value],
     }))
   }
 
   function focusField(field: keyof RequestDemoFormData) {
-    if (field === 'useCases') {
-      document.querySelector<HTMLInputElement>('#useCases input[type="checkbox"]')?.focus()
-      return
-    }
     document.getElementById(field)?.focus()
   }
 
@@ -361,88 +375,6 @@ export function RequestDemo() {
         </div>
 
         <div className={fieldWrapperClass}>
-          <label className={labelClass} htmlFor="currentPlatform">
-            Current Database / Platform
-          </label>
-          <select
-            id="currentPlatform"
-            name="currentPlatform"
-            className={inputClass}
-            value={formData.currentPlatform}
-            onChange={(event) =>
-              updateField(
-                'currentPlatform',
-                event.target.value as RequestDemoFormData['currentPlatform'],
-              )
-            }
-          >
-            <option value="">Select current platform</option>
-            {CURRENT_PLATFORM_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-          {formData.currentPlatform === 'Other' && (
-            <input
-              id="currentPlatformOther"
-              name="currentPlatformOther"
-              type="text"
-              placeholder="Please specify"
-              className={`${inputClass} mt-2`}
-              value={formData.currentPlatformOther}
-              onChange={(event) => updateField('currentPlatformOther', event.target.value)}
-            />
-          )}
-        </div>
-
-        <div className={fieldWrapperClass}>
-          <label className={labelClass} htmlFor="dataVolume">
-            Data Volume (approx.)
-          </label>
-          <select
-            id="dataVolume"
-            name="dataVolume"
-            className={inputClass}
-            value={formData.dataVolume}
-            onChange={(event) =>
-              updateField('dataVolume', event.target.value as RequestDemoFormData['dataVolume'])
-            }
-          >
-            <option value="">Select data volume</option>
-            {DATA_VOLUME_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <fieldset id="useCases" className={fieldWrapperClass}>
-          <legend className={labelClass}>
-            Primary Use Case / Interest <span aria-hidden="true">*</span>
-          </legend>
-          <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {USE_CASE_OPTIONS.map((option) => (
-              <label key={option} className="flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  className={checkboxClass}
-                  checked={formData.useCases.includes(option)}
-                  onChange={() => toggleUseCase(option)}
-                />
-                {option}
-              </label>
-            ))}
-          </div>
-          {shouldShowError('useCases') && (
-            <p id="useCases-error" className={errorTextClass} role="alert">
-              {errors.useCases}
-            </p>
-          )}
-        </fieldset>
-
-        <div className={fieldWrapperClass}>
           <label className={labelClass} htmlFor="timeline">
             Project Timeline <span aria-hidden="true">*</span>
           </label>
@@ -587,6 +519,194 @@ export function RequestDemo() {
           />
           Keep me updated with product news and offers.
         </label>
+
+        <div className={fieldWrapperClass}>
+          <label className={labelClass} htmlFor="customerIndustry">
+            Customer Industry
+          </label>
+          <select
+            id="customerIndustry"
+            name="customerIndustry"
+            className={inputClass}
+            value={formData.customerIndustry}
+            onChange={(event) =>
+              updateField(
+                'customerIndustry',
+                event.target.value as RequestDemoFormData['customerIndustry'],
+              )
+            }
+          >
+            <option value="">Select an industry</option>
+            {CUSTOMER_INDUSTRY_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          {formData.customerIndustry === 'Other' && (
+            <input
+              id="customerIndustryOther"
+              name="customerIndustryOther"
+              type="text"
+              placeholder="Please specify"
+              className={`${inputClass} mt-2`}
+              value={formData.customerIndustryOther}
+              onChange={(event) => updateField('customerIndustryOther', event.target.value)}
+            />
+          )}
+        </div>
+
+        <div className={fieldWrapperClass}>
+          <label className={labelClass} htmlFor="projectName">
+            Project Name
+          </label>
+          <input
+            id="projectName"
+            name="projectName"
+            type="text"
+            maxLength={120}
+            className={inputClass}
+            value={formData.projectName}
+            onChange={(event) => updateField('projectName', event.target.value)}
+          />
+        </div>
+
+        <div className={fieldWrapperClass}>
+          <label className={labelClass} htmlFor="solutionType">
+            Solution Type of Interest
+          </label>
+          <select
+            id="solutionType"
+            name="solutionType"
+            className={inputClass}
+            value={formData.solutionType}
+            onChange={(event) =>
+              updateField(
+                'solutionType',
+                event.target.value as RequestDemoFormData['solutionType'],
+              )
+            }
+          >
+            <option value="">Select a solution type</option>
+            {SOLUTION_TYPE_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          {formData.solutionType === 'Other' && (
+            <input
+              id="solutionTypeOther"
+              name="solutionTypeOther"
+              type="text"
+              placeholder="Please specify"
+              className={`${inputClass} mt-2`}
+              value={formData.solutionTypeOther}
+              onChange={(event) => updateField('solutionTypeOther', event.target.value)}
+            />
+          )}
+        </div>
+
+        <div className={fieldWrapperClass}>
+          <label className={labelClass} htmlFor="currentSituation">
+            Current Situation
+          </label>
+          <textarea
+            id="currentSituation"
+            name="currentSituation"
+            maxLength={2000}
+            rows={4}
+            className={inputClass}
+            value={formData.currentSituation}
+            onChange={(event) => updateField('currentSituation', event.target.value)}
+          />
+        </div>
+
+        <div className={fieldWrapperClass}>
+          <label className={labelClass} htmlFor="businessChallenges">
+            Business Challenges
+          </label>
+          <textarea
+            id="businessChallenges"
+            name="businessChallenges"
+            maxLength={2000}
+            rows={4}
+            className={inputClass}
+            value={formData.businessChallenges}
+            onChange={(event) => updateField('businessChallenges', event.target.value)}
+          />
+        </div>
+
+        <div className={fieldWrapperClass}>
+          <label className={labelClass} htmlFor="objectives">
+            Objectives
+          </label>
+          <textarea
+            id="objectives"
+            name="objectives"
+            maxLength={2000}
+            rows={4}
+            className={inputClass}
+            value={formData.objectives}
+            onChange={(event) => updateField('objectives', event.target.value)}
+          />
+        </div>
+
+        <fieldset id="integrationsNeeded" className={fieldWrapperClass}>
+          <legend className={labelClass}>Integrations Needed</legend>
+          <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {INTEGRATIONS_NEEDED_OPTIONS.map((option) => (
+              <label key={option} className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className={checkboxClass}
+                  checked={formData.integrationsNeeded.includes(option as IntegrationNeeded)}
+                  onChange={() => toggleIntegrationNeeded(option as IntegrationNeeded)}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+          {formData.integrationsNeeded.includes('Other') && (
+            <input
+              id="integrationsNeededOther"
+              name="integrationsNeededOther"
+              type="text"
+              placeholder="Please specify"
+              className={`${inputClass} mt-2`}
+              value={formData.integrationsNeededOther}
+              onChange={(event) => updateField('integrationsNeededOther', event.target.value)}
+            />
+          )}
+        </fieldset>
+
+        <fieldset id="specialRequirements" className={fieldWrapperClass}>
+          <legend className={labelClass}>Special Requirements</legend>
+          <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {SPECIAL_REQUIREMENTS_OPTIONS.map((option) => (
+              <label key={option} className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className={checkboxClass}
+                  checked={formData.specialRequirements.includes(option as SpecialRequirement)}
+                  onChange={() => toggleSpecialRequirement(option as SpecialRequirement)}
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+          {formData.specialRequirements.includes('Other') && (
+            <input
+              id="specialRequirementsOther"
+              name="specialRequirementsOther"
+              type="text"
+              placeholder="Please specify"
+              className={`${inputClass} mt-2`}
+              value={formData.specialRequirementsOther}
+              onChange={(event) => updateField('specialRequirementsOther', event.target.value)}
+            />
+          )}
+        </fieldset>
 
         <div aria-hidden="true" className="absolute h-px w-px overflow-hidden opacity-0">
           <label htmlFor="_gotcha">Leave this field empty</label>

@@ -23,10 +23,6 @@ function baseFormData(overrides: Partial<RequestDemoFormData> = {}): RequestDemo
     jobTitle: 'Engineer',
     country: 'US',
     companySize: '1-50',
-    currentPlatform: '',
-    currentPlatformOther: '',
-    dataVolume: '',
-    useCases: ['Data migration'],
     timeline: 'researching',
     budgetRange: '',
     preferredDemoAt: '',
@@ -34,6 +30,18 @@ function baseFormData(overrides: Partial<RequestDemoFormData> = {}): RequestDemo
     referralSource: '',
     marketingOptIn: false,
     consent: true,
+    customerIndustry: '',
+    customerIndustryOther: '',
+    projectName: '',
+    solutionType: '',
+    solutionTypeOther: '',
+    currentSituation: '',
+    businessChallenges: '',
+    objectives: '',
+    integrationsNeeded: [],
+    integrationsNeededOther: '',
+    specialRequirements: [],
+    specialRequirementsOther: '',
     ...overrides,
   }
 }
@@ -98,14 +106,12 @@ describe('calculateLeadScore', () => {
       workEmail: 'vp@acme.com',
       jobTitle: 'VP',
       companySize: '1000+',
-      dataVolume: '>10TB',
       timeline: 'immediate',
       budgetRange: '>$200k',
-      currentPlatform: 'Oracle',
       country: 'US',
       preferredDemoAt: '2026-01-01T10:00:00Z',
     })
-    expect(calculateLeadScore(data, true)).toBe(95)
+    expect(calculateLeadScore(data, true)).toBe(75)
   })
 
   it('never exceeds 100', () => {
@@ -152,11 +158,6 @@ describe('validateRequestDemoForm', () => {
   it('flags an unchecked consent box', () => {
     const errors = validateRequestDemoForm(baseFormData({ consent: false }))
     expect(errors.consent).toBeDefined()
-  })
-
-  it('flags zero selected use cases', () => {
-    const errors = validateRequestDemoForm(baseFormData({ useCases: [] }))
-    expect(errors.useCases).toBeDefined()
   })
 })
 
@@ -213,13 +214,42 @@ describe('buildRequestDemoPayload', () => {
     expect(payload._gotcha).toBe('')
   })
 
-  it('resolves currentPlatform to the free-text value when "Other" is selected', () => {
+  it('resolves customerIndustry to the free-text value when "Other" is selected', () => {
     const payload = buildRequestDemoPayload(
-      baseFormData({ currentPlatform: 'Other', currentPlatformOther: 'Custom DB' }),
+      baseFormData({ customerIndustry: 'Other', customerIndustryOther: 'Aerospace' }),
       noUtm,
       '',
     )
-    expect(payload.currentPlatform).toBe('Custom DB')
+    expect(payload.customerIndustry).toBe('Aerospace')
+  })
+
+  it('leaves all Project & Solution Details fields null/empty when not provided', () => {
+    const payload = buildRequestDemoPayload(baseFormData(), noUtm, '')
+    expect(payload.customerIndustry).toBeNull()
+    expect(payload.projectName).toBeNull()
+    expect(payload.solutionType).toBeNull()
+    expect(payload.currentSituation).toBeNull()
+    expect(payload.businessChallenges).toBeNull()
+    expect(payload.objectives).toBeNull()
+    expect(payload.integrationsNeeded).toEqual([])
+    expect(payload.specialRequirements).toEqual([])
+  })
+
+  it('passes through provided Project & Solution Details fields', () => {
+    const payload = buildRequestDemoPayload(
+      baseFormData({
+        projectName: 'HTV Logistics Application',
+        currentSituation: 'Manual coordination via email and spreadsheets.',
+        integrationsNeeded: ['SharePoint', 'SSO'],
+        specialRequirements: ['Document centralization'],
+      }),
+      noUtm,
+      '',
+    )
+    expect(payload.projectName).toBe('HTV Logistics Application')
+    expect(payload.currentSituation).toBe('Manual coordination via email and spreadsheets.')
+    expect(payload.integrationsNeeded).toEqual(['SharePoint', 'SSO'])
+    expect(payload.specialRequirements).toEqual(['Document centralization'])
   })
 
   it('passes through UTM params and honeypot value', () => {

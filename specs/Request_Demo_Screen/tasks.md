@@ -267,4 +267,174 @@ layout at 375/768/1440px, per spec Section 10.
 None blocking implementation — see `Request_Demo_Screen_Spec.md` Section 13
 for unresolved business/ops questions (notification email owner, Formspree
 plan cap, integrations) that don't block building the screen itself.
-</content>
+
+---
+
+## Phase 4: Spec v1.3 Field Delta (removal + Project & Solution Details)
+
+Based on: `specs/Request_Demo_Screen/Request_Demo_Screen_Spec.md` (v1.3),
+`specs/Request_Demo_Screen/plan.md` §6.
+
+**Context:** the screen above (Phases 1–3) was implemented against spec
+v1.0/v1.1. The spec has since been updated to v1.3: it removes "Current
+Database / Platform", "Data Volume (approx.)", and "Primary Use Case /
+Interest" (the last of which is currently a **required** field in code —
+see `REQUIRED_FIELD_ORDER` in `src/lib/requestDemo.ts`), adjusts the Lead
+Quality Scoring formula accordingly, and adds an optional "Project &
+Solution Details" block (8 new fields, #15–22). These tasks bring the
+implementation back in sync with the spec.
+
+### Task 9: Update constants and types for removed/added fields
+
+**Description:** In `src/content/requestDemo.ts`, remove all exports tied
+to the three deleted fields and add the constants/types for the 8 new
+optional fields, per spec §4 and §7.
+
+**Acceptance criteria:**
+- [x] `CURRENT_PLATFORM_OPTIONS`, `CurrentPlatform`, `DATA_VOLUME_OPTIONS`, `DataVolume`, `USE_CASE_OPTIONS`, `UseCase`, and `COMPETITOR_PLATFORMS` are removed.
+- [x] `LEAD_SCORE_WEIGHTS` no longer has `highDataVolume` or `competitorPlatform`.
+- [x] `RequestDemoFormData` no longer has `currentPlatform`, `currentPlatformOther`, `dataVolume`, `useCases`; it gains `customerIndustry`, `customerIndustryOther`, `projectName`, `solutionType`, `solutionTypeOther`, `currentSituation`, `businessChallenges`, `objectives`, `integrationsNeeded`, `integrationsNeededOther`, `specialRequirements`, `specialRequirementsOther`.
+- [x] `RequestDemoPayload` mirrors the same removals/additions per spec §8's JSON contract (`null` for blank single fields, `[]` for blank multi-select).
+- [x] New option-list constants exist: `CUSTOMER_INDUSTRY_OPTIONS`, `SOLUTION_TYPE_OPTIONS`, `INTEGRATIONS_NEEDED_OPTIONS`, `SPECIAL_REQUIREMENTS_OPTIONS`, matching spec §4 rows #15, #17, #21, #22.
+
+**Verification:**
+- [x] `npx tsc --noEmit` will show errors in `lib/` and `sections/` at this point — expected, resolved by Tasks 10–12.
+
+**Dependencies:** None (this is the delta's foundation)
+
+**Files likely touched:**
+- `src/content/requestDemo.ts`
+
+**Estimated scope:** M
+
+---
+
+### Task 10: Update scoring, validation, and payload builder
+
+**Description:** In `src/lib/requestDemo.ts`, remove logic tied to the
+deleted fields and wire the new optional fields into
+`buildRequestDemoPayload`.
+
+**Acceptance criteria:**
+- [x] `isHighDataVolume` and `isCompetitorPlatform` (and their use in `calculateLeadScore`) are removed.
+- [x] `REQUIRED_FIELD_ORDER` no longer includes `'useCases'`; `validateRequestDemoForm` no longer requires it.
+- [x] `buildRequestDemoPayload` stops mapping `currentPlatform`/`dataVolume`/`useCases` and starts mapping all 8 new fields (free-text "Other" values resolved the same way `currentPlatformOther` used to be, per spec §8).
+- [x] `src/lib/requestDemo.test.ts` no longer references deleted functions/fields; the `calculateLeadScore` "sums every applicable factor" test reflects the new (lower) achievable ceiling.
+
+**Verification:**
+- [x] `npx tsc --noEmit` passes for files under `src/lib/` and `src/content/`.
+- [x] `npm test -- requestDemo` (lib unit tests) passes.
+
+**Dependencies:** Task 9
+
+**Files likely touched:**
+- `src/lib/requestDemo.ts`, `src/lib/requestDemo.test.ts`
+
+**Estimated scope:** M
+
+---
+
+### Task 11: Remove deprecated fields from the form UI
+
+**Description:** In `src/sections/RequestDemo.tsx`, delete the JSX,
+state, and handler code for "Current Database / Platform", "Data Volume
+(approx.)", and "Primary Use Case / Interest".
+
+**Acceptance criteria:**
+- [x] The three fields' JSX blocks (select+other input, select, fieldset) are removed.
+- [x] `toggleUseCase` and the `'useCases'` branch in `focusField` are removed.
+- [x] `initialFormData` no longer sets `currentPlatform`, `currentPlatformOther`, `dataVolume`, `useCases`.
+- [x] No unused imports remain (`CURRENT_PLATFORM_OPTIONS`, `DATA_VOLUME_OPTIONS`, `USE_CASE_OPTIONS`, `type UseCase`).
+
+**Verification:**
+- [x] `npx tsc --noEmit` passes project-wide.
+- [x] `npm run lint` passes (no unused-import warnings).
+
+**Dependencies:** Task 10
+
+**Files likely touched:**
+- `src/sections/RequestDemo.tsx`
+
+**Estimated scope:** S
+
+---
+
+### Task 12: Add Project & Solution Details fields to the form UI
+
+**Description:** In the same component, add the 8 new optional fields
+(spec §4, #15–22) using the existing shared input/select/textarea/checkbox
+style constants (`labelClass`, `inputClass`, `checkboxClass`,
+`fieldWrapperClass`). Reuse the same checkbox-group pattern just removed in
+Task 11 for the two multi-select fields (`integrationsNeeded`,
+`specialRequirements`), including their "Other" free-text inputs.
+
+**Acceptance criteria:**
+- [x] All 8 new fields render with visible `<label>`s (or `<legend>` for the two multi-select fieldsets), matching spec §4 field names.
+- [x] None of the 8 fields are in `REQUIRED_FIELD_ORDER`; the submit button's valid/invalid state is unaffected by leaving them all empty.
+- [x] "Other" free-text inputs for Customer Industry, Solution Type, Integrations Needed, and Special Requirements appear only when their corresponding "Other" option is selected/checked, mirroring the removed `currentPlatformOther` pattern.
+
+**Verification:**
+- [x] Test passes: `npm test -- RequestDemo` (see Task 13 for the specific new assertions).
+- [x] Manual check: `npm run dev`, new fields render; submitting with only the original required fields filled (all 8 new fields empty) still succeeds.
+
+**Dependencies:** Task 11
+
+**Files likely touched:**
+- `src/sections/RequestDemo.tsx`
+
+**Estimated scope:** M
+
+---
+
+### Task 13: Update component tests for the field delta
+
+**Description:** In `src/sections/RequestDemo.test.tsx`, remove
+assertions tied to the deleted fields and add coverage for the new ones,
+per spec §11's new acceptance criteria.
+
+**Acceptance criteria:**
+- [x] Tests asserting "Current Database / Platform", "Data Volume (approx.)", or "Primary Use Case / Interest" render/validate are removed; `fillRequiredFields()` no longer clicks the "Data migration" checkbox.
+- [x] A test asserts none of the removed fields' labels or the former payload keys (`currentPlatform`, `dataVolume`, `useCases`) are present in the rendered DOM or a submitted payload.
+- [x] A test asserts all 8 new fields render with labels.
+- [x] A test asserts submission succeeds when all 8 new fields are left empty (spec §11 criterion).
+- [x] A test asserts values entered into at least one new field appear in the mocked-`fetch` request body under the correct payload key.
+
+**Verification:**
+- [x] `npm test -- RequestDemo` passes with the updated suite.
+
+**Dependencies:** Task 12
+
+**Files likely touched:**
+- `src/sections/RequestDemo.test.tsx`
+
+**Estimated scope:** M
+
+---
+
+### Checkpoint: Field Delta Complete
+- [x] `npm run build && npm test && npm run lint` all pass
+- [x] Every Acceptance Criterion in spec §11 re-verified, including the
+      three v1.2/v1.3-specific criteria (fields optional, values reach
+      payload, removed fields/keys absent)
+- [x] No references to removed exports/fields remain anywhere in `src/`
+      (spot-check via `code_graph`/grep for `currentPlatform`,
+      `dataVolume`, `useCases`, `CURRENT_PLATFORM_OPTIONS`, etc.)
+- [x] Review with human before considering this delta complete
+
+---
+
+## Risks and Mitigations (Phase 4)
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Removing `useCases` from `REQUIRED_FIELD_ORDER` shifts which field is "first invalid" in existing tests | Medium | Task 10 updates `REQUIRED_FIELD_ORDER`; Task 13 re-verifies the focus-on-invalid-submit test still targets `fullName` (unaffected, since `useCases` was last in the order) |
+| Leftover references to deleted exports cause a silent runtime `undefined` instead of a build error | Low | `npx tsc --noEmit` after each of Tasks 9–11 catches this at compile time, not runtime |
+| New multi-select fields diverge stylistically from the removed `useCases` pattern | Low | Task 12 explicitly reuses the same checkbox-group markup/logic being deleted in Task 11 |
+| Scoring ceiling change goes unnoticed, leaving a stale comment/test expecting the old max | Medium | Task 10's test update explicitly asserts the new sum for an all-criteria-met case, not just `<= 100` |
+
+## Open Questions (Phase 4)
+
+None blocking this delta — see `Request_Demo_Screen_Spec.md` Section 13
+for unresolved business questions (Q7 scoring bonus for new fields, Q9
+option-list sign-off) that don't block implementing the fields as specified.
+

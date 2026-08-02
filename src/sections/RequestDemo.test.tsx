@@ -10,7 +10,6 @@ function fillRequiredFields() {
   fireEvent.change(screen.getByLabelText(/^Job Title/), { target: { value: 'Engineer' } })
   fireEvent.change(screen.getByLabelText(/^Country/), { target: { value: 'US' } })
   fireEvent.change(screen.getByLabelText(/^Company Size/), { target: { value: '1-50' } })
-  fireEvent.click(screen.getByRole('checkbox', { name: 'Data migration' }))
   fireEvent.change(screen.getByLabelText(/^Project Timeline/), { target: { value: 'researching' } })
   fireEvent.click(
     screen.getByRole('checkbox', {
@@ -42,17 +41,81 @@ describe('RequestDemo', () => {
     render(<RequestDemo />)
     expect(screen.getByLabelText(/^Country/)).toBeInTheDocument()
     expect(screen.getByLabelText(/^Company Size/)).toBeInTheDocument()
-    expect(screen.getByLabelText('Current Database / Platform')).toBeInTheDocument()
-    expect(screen.getByLabelText('Data Volume (approx.)')).toBeInTheDocument()
     expect(screen.getByLabelText(/^Project Timeline/)).toBeInTheDocument()
     expect(screen.getByLabelText('Budget Range')).toBeInTheDocument()
     expect(screen.getByLabelText('How did you hear about us?')).toBeInTheDocument()
   })
 
-  it('renders the use case checkbox group', () => {
+  it('does not render the removed Current Database / Platform, Data Volume, or Primary Use Case fields', () => {
     render(<RequestDemo />)
-    expect(screen.getByText(/Primary Use Case \/ Interest/)).toBeInTheDocument()
-    expect(screen.getByRole('checkbox', { name: 'Data migration' })).toBeInTheDocument()
+    expect(screen.queryByLabelText('Current Database / Platform')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Data Volume (approx.)')).not.toBeInTheDocument()
+    expect(screen.queryByText(/Primary Use Case \/ Interest/)).not.toBeInTheDocument()
+  })
+
+  it('renders the Project & Solution Details fields, all optional', () => {
+    render(<RequestDemo />)
+    expect(screen.getByLabelText('Customer Industry')).toBeInTheDocument()
+    expect(screen.getByLabelText('Project Name')).toBeInTheDocument()
+    expect(screen.getByLabelText('Solution Type of Interest')).toBeInTheDocument()
+    expect(screen.getByLabelText('Current Situation')).toBeInTheDocument()
+    expect(screen.getByLabelText('Business Challenges')).toBeInTheDocument()
+    expect(screen.getByLabelText('Objectives')).toBeInTheDocument()
+    expect(screen.getByText('Integrations Needed')).toBeInTheDocument()
+    expect(screen.getByText('Special Requirements')).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'SharePoint' })).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Document centralization' })).toBeInTheDocument()
+    ;[
+      'Customer Industry',
+      'Project Name',
+      'Solution Type of Interest',
+      'Current Situation',
+      'Business Challenges',
+      'Objectives',
+    ].forEach((label) => {
+      expect(screen.getByLabelText(label)).not.toHaveAttribute('aria-required', 'true')
+    })
+  })
+
+  it('succeeds when submitted with all Project & Solution Details fields left empty', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<RequestDemo />)
+    fillRequiredFields()
+    submitForm()
+
+    await waitFor(() =>
+      expect(screen.getByText(/Your request has been received/)).toBeInTheDocument(),
+    )
+    vi.unstubAllGlobals()
+  })
+
+  it('includes entered Project & Solution Details values in the submitted payload', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ ok: true }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<RequestDemo />)
+    fillRequiredFields()
+    fireEvent.change(screen.getByLabelText('Project Name'), {
+      target: { value: 'HTV Logistics Application' },
+    })
+    fireEvent.click(screen.getByRole('checkbox', { name: 'SharePoint' }))
+    submitForm()
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    expect(body.projectName).toBe('HTV Logistics Application')
+    expect(body.integrationsNeeded).toEqual(['SharePoint'])
+    vi.unstubAllGlobals()
   })
 
   it('renders remaining fields and checkboxes', () => {
@@ -97,12 +160,6 @@ describe('RequestDemo', () => {
     expect(consentCheckbox).not.toBeChecked()
     fireEvent.submit(screen.getByRole('button', { name: 'Request Demo' }).closest('form')!)
     expect(screen.getByText('You must agree before submitting.')).toBeInTheDocument()
-  })
-
-  it('shows an error when zero use cases are selected on submit', () => {
-    render(<RequestDemo />)
-    fireEvent.submit(screen.getByRole('button', { name: 'Request Demo' }).closest('form')!)
-    expect(screen.getByText('Select at least one use case.')).toBeInTheDocument()
   })
 
   it('renders the honeypot field empty and visually hidden', () => {

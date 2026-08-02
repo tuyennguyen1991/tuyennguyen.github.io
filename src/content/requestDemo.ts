@@ -24,14 +24,6 @@ export const DECISION_MAKER_KEYWORDS = [
 
 export const TARGET_ACCOUNT_DOMAINS: string[] = []
 
-export const COMPETITOR_PLATFORMS = [
-  'Oracle',
-  'SQL Server',
-  'MySQL/PostgreSQL',
-  'MongoDB',
-  'Legacy/On-prem',
-]
-
 export const ACTIVE_SALES_TERRITORY_COUNTRIES: string[] = []
 
 export const COUNTRY_OPTIONS = [
@@ -67,30 +59,6 @@ export type CountryCode = (typeof COUNTRY_OPTIONS)[number]['code']
 export const COMPANY_SIZE_OPTIONS = ['1-50', '51-200', '201-1000', '1000+'] as const
 export type CompanySize = (typeof COMPANY_SIZE_OPTIONS)[number]
 
-export const DATA_VOLUME_OPTIONS = ['<100GB', '100GB-1TB', '1-10TB', '>10TB', 'Not sure'] as const
-export type DataVolume = (typeof DATA_VOLUME_OPTIONS)[number]
-
-export const CURRENT_PLATFORM_OPTIONS = [
-  'Oracle',
-  'SQL Server',
-  'MySQL/PostgreSQL',
-  'MongoDB',
-  'Legacy/On-prem',
-  'None/Greenfield',
-  'Other',
-] as const
-export type CurrentPlatform = (typeof CURRENT_PLATFORM_OPTIONS)[number]
-
-export const USE_CASE_OPTIONS = [
-  'Data migration',
-  'Performance tuning',
-  'Cloud migration',
-  'HA/DR',
-  'New system build',
-  'Other',
-] as const
-export type UseCase = (typeof USE_CASE_OPTIONS)[number]
-
 export const TIMELINE_OPTIONS = [
   { value: 'immediate', label: 'Immediate (0-1 month)' },
   { value: '1-3m', label: '1-3 months' },
@@ -112,14 +80,58 @@ export type BudgetRange = (typeof BUDGET_RANGE_OPTIONS)[number]
 export const REFERRAL_SOURCE_OPTIONS = ['Search', 'Referral', 'Event', 'Social', 'Ad', 'Other'] as const
 export type ReferralSource = (typeof REFERRAL_SOURCE_OPTIONS)[number]
 
+export const CUSTOMER_INDUSTRY_OPTIONS = [
+  'Manufacturing',
+  'Automotive',
+  'Trading & Logistics',
+  'Retail',
+  'Technology',
+  'Financial Services',
+  'Healthcare',
+  'Other',
+] as const
+export type CustomerIndustry = (typeof CUSTOMER_INDUSTRY_OPTIONS)[number]
+
+export const SOLUTION_TYPE_OPTIONS = [
+  'Custom Software Development',
+  'Logistics Management',
+  'Bidding/Procurement Management',
+  'Workflow/Approval Automation',
+  'Database Solution',
+  'Other',
+] as const
+export type SolutionType = (typeof SOLUTION_TYPE_OPTIONS)[number]
+
+export const INTEGRATIONS_NEEDED_OPTIONS = [
+  'SharePoint',
+  'SSO',
+  'MFA',
+  'ERP',
+  'WMS',
+  'Existing internal approval systems',
+  'Other',
+] as const
+export type IntegrationNeeded = (typeof INTEGRATIONS_NEEDED_OPTIONS)[number]
+
+export const SPECIAL_REQUIREMENTS_OPTIONS = [
+  'Document centralization',
+  'Vendor/external portal access',
+  'Quote encryption & secure bidding',
+  'Dashboard/KPI reporting',
+  'Audit logging & security monitoring',
+  'Role-based access control',
+  'SSO/MFA authentication',
+  'Multi-language (EN/VI) support',
+  'Other',
+] as const
+export type SpecialRequirement = (typeof SPECIAL_REQUIREMENTS_OPTIONS)[number]
+
 export const LEAD_SCORE_WEIGHTS = {
   targetAccountDomain: 20,
   decisionMakerTitle: 15,
   largeCompanySize: 10,
-  highDataVolume: 10,
   urgentTimeline: 20,
   budgetProvided: 15,
-  competitorPlatform: 10,
   activeTerritory: 5,
   preferredDemoTimeProvided: 5,
   repeatRequestBonus: 10,
@@ -140,10 +152,6 @@ export interface RequestDemoFormData {
   jobTitle: string
   country: string
   companySize: CompanySize | ''
-  currentPlatform: CurrentPlatform | ''
-  currentPlatformOther: string
-  dataVolume: DataVolume | ''
-  useCases: UseCase[]
   timeline: Timeline | ''
   budgetRange: BudgetRange | ''
   preferredDemoAt: string
@@ -151,6 +159,18 @@ export interface RequestDemoFormData {
   referralSource: ReferralSource | ''
   marketingOptIn: boolean
   consent: boolean
+  customerIndustry: CustomerIndustry | ''
+  customerIndustryOther: string
+  projectName: string
+  solutionType: SolutionType | ''
+  solutionTypeOther: string
+  currentSituation: string
+  businessChallenges: string
+  objectives: string
+  integrationsNeeded: IntegrationNeeded[]
+  integrationsNeededOther: string
+  specialRequirements: SpecialRequirement[]
+  specialRequirementsOther: string
 }
 
 export interface RequestDemoPayload {
@@ -161,9 +181,6 @@ export interface RequestDemoPayload {
   jobTitle: string
   country: string
   companySize: string
-  currentPlatform: string | null
-  dataVolume: string | null
-  useCases: string[]
   timeline: string
   budgetRange: string | null
   preferredDemoAt: string | null
@@ -171,6 +188,14 @@ export interface RequestDemoPayload {
   referralSource: string | null
   marketingOptIn: boolean
   consent: boolean
+  customerIndustry: string | null
+  projectName: string | null
+  solutionType: string | null
+  currentSituation: string | null
+  businessChallenges: string | null
+  objectives: string | null
+  integrationsNeeded: string[]
+  specialRequirements: string[]
   utm_source: string | null
   utm_medium: string | null
   utm_campaign: string | null
