@@ -4,7 +4,7 @@ import { businessDomains } from './businessDomains'
 
 describe('articles', () => {
   it('loads one article per markdown file under content/articles', () => {
-    expect(articles.length).toBe(4)
+    expect(articles.length).toBe(28)
   })
 
   it('gives every article the required fields sourced from its markdown frontmatter', () => {

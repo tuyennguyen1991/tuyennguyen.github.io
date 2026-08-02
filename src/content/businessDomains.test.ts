@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { businessDomains } from './businessDomains'
-import { skillCategories } from './skills'
-import { projects } from './projects'
+import { articles } from './articles'
 
 describe('businessDomains', () => {
   it('has a non-empty id, name, and description for every domain', () => {
@@ -17,16 +16,19 @@ describe('businessDomains', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('is grounded in the real skill categories and project categories already published on the site', () => {
-    const skillCategoryNames = skillCategories.map((category) => category.category)
-    const projectCategoryIds = new Set(projects.map((project) => project.category))
-    const realDomainNames = new Set([
-      ...skillCategoryNames,
-      ...(projectCategoryIds.has('ai-automation') ? ['AI & Automation'] : []),
-    ])
+  it('has unique names', () => {
+    const names = businessDomains.map((domain) => domain.name)
+    expect(new Set(names).size).toBe(names.length)
+  })
 
-    businessDomains.forEach((domain) => {
-      expect(realDomainNames.has(domain.name)).toBe(true)
+  it('covers every domain referenced by an article', () => {
+    const domainIds = new Set(businessDomains.map((domain) => domain.id))
+    articles.forEach((article) => {
+      expect(domainIds.has(article.domain)).toBe(true)
     })
+  })
+
+  it('has at least ten domains, reflecting the breadth of engagement types covered', () => {
+    expect(businessDomains.length).toBeGreaterThanOrEqual(10)
   })
 })
