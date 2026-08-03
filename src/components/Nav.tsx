@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { navItems } from '../content/navigation'
 import { profile } from '../content/profile'
 import { useScrollSpy } from '../hooks/useScrollSpy'
@@ -30,6 +31,11 @@ export function Nav() {
               </a>
             </li>
           ))}
+          <li>
+            <Link to="/org-chart" className="text-sm font-medium text-slate-600 hover:text-blue-600">
+              Org Chart
+            </Link>
+          </li>
         </ul>
         <a
           href={profile.resumeUrl}
