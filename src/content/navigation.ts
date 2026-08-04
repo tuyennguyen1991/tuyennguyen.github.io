@@ -10,7 +10,6 @@ export const navItems: NavItem[] = [
   { id: 'skills', label: 'Skills' },
   { id: 'projects', label: 'Projects' },
   { id: 'ai-initiatives', label: 'AI & Automation' },
-  { id: 'blog', label: 'Blog' },
   { id: 'contact', label: 'Contact' },
   { id: 'request-demo', label: 'Request a Demo' },
 ]

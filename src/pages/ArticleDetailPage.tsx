@@ -15,7 +15,7 @@ export function ArticleDetailPage() {
           <Link to="/" className="font-semibold text-slate-900">
             {profile.name}
           </Link>
-          <Link to="/#blog" className="text-sm font-medium text-slate-600 hover:text-blue-600">
+          <Link to="/blog" className="text-sm font-medium text-slate-600 hover:text-blue-600">
             ← Back to Blog
           </Link>
         </div>
@@ -60,7 +60,7 @@ export function ArticleDetailPage() {
             <p className="mt-4 text-slate-600">
               The article you are looking for does not exist or may have been moved.
             </p>
-            <Link to="/#blog" className="mt-6 inline-block text-blue-600 hover:underline">
+            <Link to="/blog" className="mt-6 inline-block text-blue-600 hover:underline">
               ← Back to Blog
             </Link>
           </div>

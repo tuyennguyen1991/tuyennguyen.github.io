@@ -33,7 +33,7 @@ describe('ArticleDetailPage', () => {
     const article = articles[0]
     renderAt(`/blog/${article.id}`)
 
-    expect(screen.getByRole('link', { name: /back to blog/i })).toHaveAttribute('href', '/#blog')
+    expect(screen.getByRole('link', { name: /back to blog/i })).toHaveAttribute('href', '/blog')
   })
 
   it('shows a not-found message for an unknown article id', () => {

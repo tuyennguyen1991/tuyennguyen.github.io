@@ -32,6 +32,11 @@ export function Nav() {
             </li>
           ))}
           <li>
+            <Link to="/blog" className="text-sm font-medium text-slate-600 hover:text-blue-600">
+              Blog
+            </Link>
+          </li>
+          <li>
             <Link to="/org-chart" className="text-sm font-medium text-slate-600 hover:text-blue-600">
               Org Chart
             </Link>

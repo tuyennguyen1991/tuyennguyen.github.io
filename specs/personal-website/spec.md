@@ -1,5 +1,70 @@
 # Spec: Personal Technology Website
 
+**Version:** v2.0 (supersedes v1.0 — moves the Blog list off the homepage
+onto its own route; also documents the React Router adoption that already
+happened in the codebase but was never reflected here, see Changelog)
+**Status:** Approved for implementation (v2.0) — Assumptions below are
+low-risk defaults; proceeding directly per user goal.
+
+## Changelog
+
+- **v1.0 (implemented, as originally specced):** single-page anchor-nav
+  SPA — every core section, including "Technical Blog/Articles", rendered
+  inline on `/` via scroll-spy anchors (`#blog`, etc.); Tech Stack said
+  "React Router — NOT used."
+- **v1.1 (implemented, undocumented drift — corrected retroactively here):**
+  React Router was actually adopted (commit "restructure app with routing
+  and new article detail page") to support `/blog/:articleId` (article
+  detail pages, see `ArticleDetailPage.tsx`) and later `/org-chart` (see
+  `specs/Org_Chart/spec.md`). The homepage (`/`) still renders all other
+  sections — including the Blog **list** — inline via anchors; only
+  individual article pages and the org chart got their own routes. This
+  spec's Tech Stack section is corrected below to stop claiming Router
+  isn't used.
+- **v2.0 (this document):** the Blog **list** itself moves off the
+  homepage onto its own independent route `/blog`, mirroring how
+  `/org-chart` already works — full page, own header/footer, reached via
+  a nav `Link` instead of a scroll-spy anchor. Goal: homepage length no
+  longer grows as blog articles are added over time.
+
+## Assumptions
+
+Low-risk, mechanical defaults — proceeding with them per the direct goal
+already given; flag here for visibility, not blocking implementation:
+
+1. **New page mirrors `OrgChartPage.tsx`'s shell.** `BlogPage.tsx` gets the
+   same header pattern (site name linking to `/`, "← Back to Home" link)
+   and `<Footer />`, reusing the existing `Blog`-list markup/content logic
+   (title/date/domain/summary, link to `/blog/:articleId`) rather than
+   inventing new visual design.
+2. **`navItems` (homepage scroll-spy anchors) drops the `blog` entry.**
+   Since the Blog list no longer lives on `/`, it's no longer part of
+   `useScrollSpy`'s anchor set. The remaining 7 anchor items keep their
+   existing order (Home, About, Leadership, Skills, Projects,
+   AI & Automation, Contact, Request a Demo).
+3. **`Nav.tsx` gets a "Blog" route `Link` positioned like the existing "Org
+   Chart" `Link`** — both render as plain `<Link to="...">` list items
+   (not scroll-spy anchors) after the anchor-based items, in the order
+   Blog, then Org Chart (Blog kept first since it existed in the nav
+   before Org Chart did).
+4. **`ArticleDetailPage.tsx`'s two "← Back to Blog" links change from
+   `/#blog` to `/blog`** — both the success-path header link and the
+   not-found-state link, since the anchor target no longer exists.
+5. **`/blog` is a new static route, added alongside (not replacing)
+   `/blog/:articleId`** in `AppRoutes.tsx` — React Router v6 matches the
+   literal `/blog` path independently of the `:articleId` param route, so
+   no route-ordering conflict.
+6. **No change to `src/content/articles.ts`, `businessDomains.ts`, or the
+   underlying list-rendering JSX** (title/date/domain badge/summary/link)
+   — only its container changes from a `<section id="blog">` embedded in
+   `Home.tsx` to a full page component, matching how `OrgChartPage.tsx`
+   wraps its content without altering `orgChart.ts`.
+7. **The existing `Blog` section component is retired, not duplicated.**
+   `src/sections/Blog.tsx` (and its test) are removed/superseded by
+   `src/pages/BlogPage.tsx` — keeping one source of the list markup avoids
+   drift between a "homepage version" and a "route version" that both
+   claim to render the same list.
+
 ## Objective
 
 Build and deploy a modern, content-focused personal website on GitHub Pages
@@ -29,15 +94,46 @@ and potential collaborators.
 
 **Core sections:** Hero/Introduction, About Me, Leadership & Career
 Journey, Technical Skills & Certifications, System Architecture Projects,
-AI & Automation Initiatives, Technical Blog/Articles, Contact &
-Professional Links.
+AI & Automation Initiatives, Contact & Professional Links (all on the
+homepage, anchor nav). **Technical Blog/Articles** moved to its own
+`/blog` route in v2.0 — see Blog Routing Requirements below.
+
+**Objective addition (v2.0):** decouple the homepage's length/scroll depth
+from the number of blog articles published. Today, every new article added
+under `src/content/articles/*.md` grows the homepage's inline Blog list;
+after this change, the homepage stays a fixed length and the full,
+independently-growing blog list lives at `/blog`, exactly as `/org-chart`
+already demonstrates for the org chart content.
+
+## Blog Routing Requirements (v2.0)
+
+1. **`/blog` renders the full article list as its own page** — same
+   information per article as today (title, date, domain badge, summary,
+   link to `/blog/:articleId`), inside a `BlogPage` component with its own
+   header (site name + back-to-home link) and `<Footer />`, structurally
+   parallel to `OrgChartPage.tsx`.
+2. **The homepage (`/`) no longer renders the Blog list.** `Home.tsx` drops
+   `<Blog />`; the `#blog` anchor and its scroll-spy nav entry are removed.
+3. **The primary nav's "Blog" entry becomes a route link to `/blog`**,
+   using the same `<Link>` pattern already used for "Org Chart" — not a
+   `#blog` scroll anchor.
+4. **Every existing link that pointed at `/#blog` now points at `/blog`**
+   — specifically `ArticleDetailPage.tsx`'s two "← Back to Blog" links
+   (success path and not-found path).
+5. **Individual article pages (`/blog/:articleId`) are unchanged** — same
+   route, same component, same content rendering; only the list view moved.
+6. **Adding a new article (`src/content/articles/*.md`) never changes the
+   homepage's length or scroll behavior** — it only grows the `/blog` page.
 
 ## Tech Stack
 
 - React 18 + TypeScript (strict mode)
 - Vite (build tool / dev server)
 - Tailwind CSS
-- React Router — NOT used; single-page anchor navigation (see Assumption 2)
+- React Router — **used** for `/blog/:articleId`, `/org-chart`, and (v2.0)
+  `/blog`; the homepage (`/`) still uses single-page anchor nav for its
+  remaining 7 sections (corrects v1.0's stale claim that Router isn't
+  used — see Changelog v1.1).
 - GitHub Pages (static hosting)
 - GitHub Actions (build + deploy on push to `main`)
 - Vitest + React Testing Library (component tests)
@@ -60,17 +156,23 @@ Deploy:   automatic via .github/workflows/deploy.yml on push to main
 
 ```
 src/
-  components/       → Reusable UI components (Nav, Hero, Card, etc.)
-  sections/         → One component per core section (Hero, About, Leadership,
-                      Skills, Projects, AIInitiatives, Blog, Contact)
+  components/       → Reusable UI components (Nav, Footer, ProjectCard, etc.)
+  pages/            → Routed pages: Home, ArticleDetailPage, OrgChartPage,
+                      BlogPage (NEW v2.0), NotFoundPage
+  sections/         → One component per homepage anchor section (Hero, About,
+                      Leadership, Skills, Projects, AIInitiatives, Contact,
+                      RequestDemo) — Blog.tsx retired in v2.0 (Assumption 7)
   content/          → Structured content data (TS modules), edited to update
                       site copy without touching layout code:
                       profile.ts, career.ts, skills.ts, certifications.ts,
-                      projects.ts, articles.ts
+                      projects.ts, articles.ts, businessDomains.ts,
+                      navigation.ts, orgChart.ts, agentOrgChart.ts
   hooks/            → Shared React hooks (e.g., useScrollSpy for nav)
-  lib/              → Utilities (formatting, constants)
+  lib/              → Utilities (formatting, constants, markdown parsing)
   assets/           → Images, icons, resume.pdf reference
-  App.tsx           → Composes sections in order
+  App.tsx           → Mounts <BrowserRouter> + <AppRoutes>
+  AppRoutes.tsx      → Route table: /, /blog (NEW v2.0), /blog/:articleId,
+                      /org-chart, *
   main.tsx          → Entry point
 public/
   resume.pdf        → Downloadable resume
@@ -81,6 +183,7 @@ tests/
   deploy.yml        → CI: install, lint, test, build, deploy to gh-pages
 specs/
   personal-website/spec.md → this document
+  Org_Chart/spec.md         → reference pattern for BlogPage's page shell
 ```
 
 ## Code Style
@@ -136,6 +239,35 @@ export function Projects() {
 }
 ```
 
+**(v2.0) `BlogPage.tsx` follows `OrgChartPage.tsx`'s page-shell pattern**
+(reusing the existing article-list JSX from the retired `Blog.tsx`):
+
+```tsx
+// src/pages/BlogPage.tsx
+import { Link } from 'react-router-dom'
+import { Footer } from '../components/Footer'
+import { profile } from '../content/profile'
+import { articles } from '../content/articles'
+import { businessDomains } from '../content/businessDomains'
+
+export function BlogPage() {
+  return (
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 py-4">
+          <Link to="/" className="font-semibold text-slate-900">{profile.name}</Link>
+          <Link to="/" className="text-sm font-medium text-slate-600 hover:text-blue-600">← Back to Home</Link>
+        </div>
+      </header>
+      <main className="flex-1">
+        {/* existing article list markup, unchanged from Blog.tsx */}
+      </main>
+      <Footer />
+    </div>
+  )
+}
+```
+
 **Conventions:**
 - Components: PascalCase, one component per file, named exports (not default).
 - Content types/interfaces: PascalCase, colocated with their data array in
@@ -144,6 +276,10 @@ export function Projects() {
   express it (then use `@layer` in `index.css`).
 - No inline styles, no CSS-in-JS libraries.
 - Props interfaces named `<Component>Props`.
+- **(v2.0)** Routed pages live in `src/pages/`, homepage-only anchor
+  sections live in `src/sections/` — a component moves from `sections/` to
+  `pages/` exactly when it stops being a homepage anchor and becomes its
+  own route (this is what happens to Blog in v2.0).
 
 ## Testing Strategy
 
@@ -161,6 +297,18 @@ export function Projects() {
   aim for meaningful coverage of `content/` validation and `sections/`
   rendering, not 100%.
 - CI (GitHub Actions) runs lint + test + build on every push/PR before deploy.
+- **(v2.0) Additional levels:**
+  - `BlogPage.test.tsx` (new) asserts every article's title/date/summary
+    renders, each title links to `/blog/:articleId`, and a "← Back to
+    Home" link exists — mirrors the retired `Blog.test.tsx` plus the
+    back-link assertion pattern from `OrgChartPage.test.tsx`.
+  - `AppRoutes.test.tsx` updated: the `/` assertion no longer expects
+    `document.getElementById('blog')`; a new case renders `/blog` and
+    asserts an article title appears.
+  - `Nav.test.tsx` updated: "Blog" is asserted as a `Link` with
+    `href="/blog"`, not an anchor `href="#blog"`.
+  - `ArticleDetailPage.test.tsx` updated (if it asserts the back-link
+    href) to expect `/blog` instead of `/#blog`.
 
 ## Boundaries
 
@@ -171,11 +319,16 @@ export function Projects() {
   - Use semantic HTML landmarks (`<header>`, `<nav>`, `<main>`, `<section>`,
     `<footer>`) and add `alt` text to all images.
   - Open external profile links in a new tab with `rel="noopener noreferrer"`.
+  - **(v2.0)** Keep exactly one source of the article-list markup (in
+    `BlogPage.tsx` after the move) — do not leave a second copy in
+    `Home.tsx` or a lingering unused `Blog.tsx`.
 - **Ask first:**
   - Adding new npm dependencies beyond the agreed stack (React, TS, Tailwind,
     Vite, Vitest/RTL, ESLint/Prettier).
   - Changing the GitHub Actions deploy workflow or Pages configuration.
-  - Switching from single-page anchor nav to multi-route (React Router).
+  - Switching the *remaining* homepage sections from anchor nav to routed
+    pages (v2.0 only moves Blog; the other 7 sections stay anchor-based
+    unless separately requested).
   - Any change to the resume file itself (content, not just its location).
 - **Never do:**
   - Commit secrets, tokens, or credentials.
@@ -184,6 +337,8 @@ export function Projects() {
   - Break the existing `index.html` redirect / `home.html` /
     `world-clock.html` without explicit instruction (unless this new site
     replaces them, to be confirmed).
+  - **(v2.0)** Leave any in-repo link pointing at `/#blog` after the move
+    (grep for it before considering the change complete).
 
 ## Success Criteria
 
@@ -204,10 +359,23 @@ export function Projects() {
 - A new project/article/skill can be added by editing only a file under
   `src/content/`, with no changes to component/layout code required.
 
+**(v2.0 additions):**
+- [ ] `/blog` renders the full article list (title/date/domain/summary,
+      link to `/blog/:articleId` per article) with no route params.
+- [ ] The homepage (`/`) no longer renders any article title, summary, or
+      the "Technical Blog / Articles" heading.
+- [ ] The primary nav's "Blog" item navigates to `/blog` (a real route),
+      not a `#blog` hash anchor.
+- [ ] No link anywhere in the codebase still points at `/#blog`.
+- [ ] Adding a new file under `src/content/articles/*.md` changes only the
+      `/blog` page's length, not the homepage's.
+- [ ] `npx tsc --noEmit`, `npm run build`, `npx eslint`, and `npm test` all
+      pass with no errors after the move.
+
 ## Decisions (resolved)
 
-1. Assumptions 1–8 confirmed: SPA with anchor nav, Vite, static PDF resume,
-   external blog links, Vitest + RTL, npm.
+1. Assumptions 1–8 (v1.0) confirmed: SPA with anchor nav, Vite, static PDF
+   resume, external blog links, Vitest + RTL, npm.
 2. This new site **replaces** the current `index.html`, `home.html`, and
    `world-clock.html`. Those files will be removed once the new site is in
    place (world clock is not carried over as a section/page unless
@@ -221,6 +389,10 @@ export function Projects() {
 5. Keep the default GitHub Pages path
    `https://tuyennguyen1991.github.io/tuyennguyen.github.io/` — no custom
    domain. Vite `base` must be set to `/tuyennguyen.github.io/`.
+6. **(v2.0)** Blog list moves to its own `/blog` route, structurally
+   identical in pattern to `/org-chart` (own page shell, own nav `Link`,
+   homepage no longer renders it) — confirmed by direct user request; the
+   7 Assumptions above are the mechanical defaults for executing that move.
 
 ## Open Questions
 

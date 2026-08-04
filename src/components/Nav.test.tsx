@@ -22,6 +22,11 @@ describe('Nav', () => {
     expect(resumeLink).toHaveAttribute('rel', 'noopener noreferrer')
   })
 
+  it('renders a Blog link', () => {
+    render(<Nav />, { wrapper: MemoryRouter })
+    expect(screen.getByRole('link', { name: 'Blog' })).toHaveAttribute('href', '/blog')
+  })
+
   it('renders an Org Chart link', () => {
     render(<Nav />, { wrapper: MemoryRouter })
     expect(screen.getByRole('link', { name: 'Org Chart' })).toHaveAttribute('href', '/org-chart')

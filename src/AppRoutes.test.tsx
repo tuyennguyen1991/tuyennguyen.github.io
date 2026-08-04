@@ -11,7 +11,17 @@ describe('AppRoutes', () => {
       </MemoryRouter>,
     )
     expect(document.getElementById('hero')).toBeInTheDocument()
-    expect(document.getElementById('blog')).toBeInTheDocument()
+  })
+
+  it('renders the blog list page at "/blog"', () => {
+    render(
+      <MemoryRouter initialEntries={['/blog']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(
+      screen.getByRole('link', { name: 'Scaling Event-Driven Systems: Lessons from Production' }),
+    ).toBeInTheDocument()
   })
 
   it('renders an article detail page at "/blog/:articleId"', () => {

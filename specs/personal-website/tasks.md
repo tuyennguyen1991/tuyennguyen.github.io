@@ -460,3 +460,98 @@ commands, and deployment process.
 
 ## Open Questions
 None — all resolved in spec.md.
+
+---
+
+## Phase 5: v2.0 Blog Moves to `/blog` Route
+
+Based on: `specs/personal-website/spec.md` v2.0, `specs/personal-website/plan.md` §6.
+Decision confirmed: Blog list moves off the homepage onto its own `/blog`
+route, structurally identical to `/org-chart`.
+
+- [ ] Task: Create `BlogPage.tsx` with its own test
+  - Acceptance: `src/pages/BlogPage.tsx` renders the same article list
+    content (title/date/domain badge/summary, link to `/blog/:articleId`)
+    currently in `src/sections/Blog.tsx`, wrapped in a header (site name
+    link to `/`, "← Back to Home" link) + `<Footer />`, matching
+    `OrgChartPage.tsx`'s shell pattern; `BlogPage.test.tsx` asserts every
+    article's title/date/summary renders, each title links to
+    `/blog/:articleId`, and a "← Back to Home" link exists.
+  - Verify: `npm test -- --run src/pages/BlogPage.test.tsx` passes.
+  - Files: `src/pages/BlogPage.tsx`, `src/pages/BlogPage.test.tsx`
+
+- [ ] Task: Wire the `/blog` route
+  - Acceptance: `AppRoutes.tsx` has `<Route path="/blog" element={<BlogPage />} />`
+    alongside the existing `/blog/:articleId` route.
+  - Verify: `npm run dev`, visit `/blog`, confirm the article list renders.
+  - Files: `src/AppRoutes.tsx`
+
+- [ ] Task: Remove Blog from the homepage
+  - Acceptance: `Home.tsx` no longer renders `<Blog />`; `src/content/navigation.ts`
+    no longer has a `{ id: 'blog', label: 'Blog' }` entry; the remaining 7
+    anchor items keep their existing order.
+  - Verify: `npm run dev`, visit `/`, confirm no article content or
+    "Technical Blog / Articles" heading renders.
+  - Files: `src/pages/Home.tsx`, `src/content/navigation.ts`
+
+- [ ] Task: Update `Nav.tsx` to link to `/blog`
+  - Acceptance: the primary nav's "Blog" item is a `<Link to="/blog">`
+    (not a `#blog` scroll anchor), positioned before the existing "Org
+    Chart" `<Link>`.
+  - Verify: manual click-through from `/` — "Blog" navigates to `/blog`.
+  - Files: `src/components/Nav.tsx`
+
+- [ ] Task: Fix `ArticleDetailPage.tsx` back-links
+  - Acceptance: both "← Back to Blog" links (success path and not-found
+    path) point to `/blog` instead of `/#blog`.
+  - Verify: manual check — from an article detail page, click "← Back to
+    Blog", confirm it lands on `/blog`.
+  - Files: `src/pages/ArticleDetailPage.tsx`
+
+- [ ] Task: Retire `src/sections/Blog.tsx` and its test
+  - Acceptance: `src/sections/Blog.tsx` and `src/sections/Blog.test.tsx`
+    are deleted; no remaining import references them.
+  - Verify: `npx tsc -p tsconfig.app.json --noEmit` passes (no dangling
+    import errors).
+  - Files: `src/sections/Blog.tsx`, `src/sections/Blog.test.tsx` (removed)
+
+- [ ] Task: Update `AppRoutes.test.tsx` and `Nav.test.tsx`
+  - Acceptance: `AppRoutes.test.tsx`'s `/` test no longer asserts
+    `document.getElementById('blog')`; a new test case renders `/blog`
+    and asserts an article heading/link appears; `Nav.test.tsx` asserts
+    "Blog" is a link with `href="/blog"`.
+  - Verify: `npm test -- --run src/AppRoutes.test.tsx src/components/Nav.test.tsx` passes.
+  - Files: `src/AppRoutes.test.tsx`, `src/components/Nav.test.tsx`
+
+- [ ] Task: Full regression pass
+  - Acceptance: no TypeScript, build, lint, or test failures anywhere in
+    the repo caused by this change; zero remaining `/#blog` references in
+    `src/`; every v2.0 Success Criterion in `specs/personal-website/spec.md`
+    holds.
+  - Verify: `npx tsc -p tsconfig.app.json --noEmit`, `npm run build`,
+    `npx eslint src/pages/BlogPage.tsx src/AppRoutes.tsx src/pages/Home.tsx
+    src/content/navigation.ts src/components/Nav.tsx
+    src/pages/ArticleDetailPage.tsx`, `npm test -- --run`, and a grep for
+    `/#blog` across `src/`.
+  - Files: (verification only, no new changes expected)
+
+### Risks and Mitigations (Phase 5)
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Leftover `/#blog` reference missed somewhere (Footer, README, other page) | Medium | Explicit repo-wide grep for `/#blog` as part of the full regression task |
+| `navItems` and `Home.tsx`'s section list get out of sync (one still references `blog`, the other doesn't) | Medium | Both edited in the same task (Task 3) |
+| Duplicate article-list markup left behind in both `Blog.tsx` and `BlogPage.tsx` | Low | `Blog.tsx`/`Blog.test.tsx` explicitly deleted in Task 6, only after `BlogPage.tsx` has equivalent test coverage |
+
+### Open Questions (Phase 5)
+
+None — Decision 6 in `specs/personal-website/spec.md` v2.0 confirms the
+move; the 7 supporting Assumptions are mechanical defaults.
+
+### Checkpoint: v2.0 Complete
+
+- [ ] All v2.0 Success Criteria in `specs/personal-website/spec.md` verified
+- [ ] `npm run build`, `npm test -- --run`, `npx eslint` all green
+- [ ] No new npm dependency added
+- [ ] Zero `/#blog` references remain in `src/`
+- [ ] Ready for human final review

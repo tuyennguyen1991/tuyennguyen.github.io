@@ -6,7 +6,6 @@ import { Leadership } from '../sections/Leadership'
 import { Skills } from '../sections/Skills'
 import { Projects } from '../sections/Projects'
 import { AIInitiatives } from '../sections/AIInitiatives'
-import { Blog } from '../sections/Blog'
 import { Contact } from '../sections/Contact'
 import { RequestDemo } from '../sections/RequestDemo'
 
@@ -21,7 +20,6 @@ export function Home() {
         <Skills />
         <Projects />
         <AIInitiatives />
-        <Blog />
         <Contact />
         <RequestDemo />
       </main>

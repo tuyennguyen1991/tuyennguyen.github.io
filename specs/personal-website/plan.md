@@ -99,3 +99,97 @@ Based on: `specs/personal-website/spec.md`
 - **Final:** all Success Criteria in spec.md §"Success Criteria" checked
   off manually (10-second clarity, resume ≤2 clicks, responsive at 3
   breakpoints, `npm run build && npm test && npm run lint` green).
+
+---
+
+## 6. Delta Plan: v2.0 Blog Moves to `/blog` Route
+
+Based on: `specs/personal-website/spec.md` v2.0 (Decision 6: Blog list
+moves off the homepage onto its own `/blog` route, mirroring `/org-chart`).
+
+### 6.1 Dependency Graph
+
+```
+1. BlogPage component (src/pages/BlogPage.tsx) — NEW
+   - reuses the article-list JSX/logic currently in src/sections/Blog.tsx
+   - own header (site name + "← Back to Home") + <Footer />, mirroring
+     OrgChartPage.tsx's shell
+   └─ depends on src/content/articles.ts, businessDomains.ts (unchanged)
+
+2. Route wiring (src/AppRoutes.tsx)
+   - add `/blog` → BlogPage, alongside existing `/blog/:articleId`
+   └─ depends on (1)
+
+3. Homepage cleanup (src/pages/Home.tsx, src/content/navigation.ts)
+   - remove <Blog /> from Home.tsx
+   - remove 'blog' entry from navItems
+   └─ no dependency on (1)/(2), but done together to avoid a dangling
+      #blog anchor with nothing to scroll to
+
+4. Nav update (src/components/Nav.tsx)
+   - "Blog" becomes a <Link to="/blog"> like the existing "Org Chart" Link
+   └─ depends on (2) for the route to exist, (3) for navItems no longer
+      including 'blog'
+
+5. Link fixups (src/pages/ArticleDetailPage.tsx)
+   - both "← Back to Blog" links: /#blog → /blog
+   └─ depends on (2)
+
+6. Retire old section (src/sections/Blog.tsx, Blog.test.tsx)
+   - delete once BlogPage.tsx has its own test coverage
+   └─ depends on (1) having equivalent test coverage first
+
+7. Tests (BlogPage.test.tsx new; AppRoutes.test.tsx, Nav.test.tsx,
+   ArticleDetailPage.test.tsx updated)
+   └─ depends on (1)-(6)
+```
+
+### 6.2 Implementation Order (vertical slices)
+
+1. **Slice A — Create `BlogPage.tsx`.** Move the article-list JSX from
+   `src/sections/Blog.tsx` into a new `src/pages/BlogPage.tsx`, wrapped in
+   `OrgChartPage.tsx`'s header/footer shell pattern (site name link to
+   `/`, "← Back to Home" link, `<Footer />`). Write `BlogPage.test.tsx`
+   with equivalent assertions to the current `Blog.test.tsx` (every
+   article's title/date/domain/summary renders, title links to
+   `/blog/:articleId`) plus a back-link assertion.
+2. **Slice B — Wire the `/blog` route.** Add `<Route path="/blog"
+   element={<BlogPage />} />` to `AppRoutes.tsx`, positioned before or
+   after `/blog/:articleId` (order-independent in RRv6 for a static vs.
+   dynamic segment, but place it directly above for readability).
+3. **Slice C — Remove Blog from the homepage.** Delete `<Blog />` from
+   `Home.tsx`'s section list; remove the `{ id: 'blog', label: 'Blog' }`
+   entry from `src/content/navigation.ts`.
+4. **Slice D — Update `Nav.tsx`.** Replace the scroll-spy "Blog" anchor
+   (which no longer exists after Slice C) with a `<Link to="/blog">Blog</Link>`
+   list item, positioned before the existing "Org Chart" `<Link>`.
+5. **Slice E — Fix `ArticleDetailPage.tsx` back-links.** Change both
+   `Link to="/#blog"` occurrences to `Link to="/blog"`.
+6. **Slice F — Retire `src/sections/Blog.tsx` + `Blog.test.tsx`.** Delete
+   both files now that `BlogPage.tsx`/`BlogPage.test.tsx` supersede them.
+7. **Slice G — Update remaining tests.** `AppRoutes.test.tsx`: replace the
+   `/` test's `document.getElementById('blog')` assertion with a new
+   `/blog` test case asserting an article heading/link appears;
+   `Nav.test.tsx`: assert "Blog" is a link with `href="/blog"`.
+8. **Slice H — Full regression.** `npx tsc -p tsconfig.app.json --noEmit`,
+   `npm run build`, `npx eslint` on all touched files, `npm test -- --run`,
+   and a repo-wide grep for `/#blog` to confirm zero remaining references.
+
+### 6.3 Risks & Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Leftover `/#blog` reference somewhere not yet found (e.g. `Footer.tsx`, README) | Slice H includes an explicit `grep -r "/#blog"` pass across `src/` before calling the change complete. |
+| `useScrollSpy` breaks if `navItems` still references `blog` after `Home.tsx` no longer renders `#blog` | Slice C removes both the JSX and the `navItems` entry in the same slice — never leaves one without the other. |
+| Duplicate article-list markup drifting between `Blog.tsx` (if left behind) and new `BlogPage.tsx` | Slice F deletes `Blog.tsx`/`Blog.test.tsx` outright once `BlogPage.tsx` has equivalent coverage — no dual-maintenance window left in the codebase. |
+| Route ordering conflict between `/blog` and `/blog/:articleId` | Not a real risk in React Router v6 (exact static match wins over param match regardless of declaration order), but Slice B still places `/blog` first for human readability. |
+
+### 6.4 Verification Checkpoints
+
+- **After Slice B:** `npm run dev`, visit `/blog` manually, confirm the
+  full article list renders with working links to `/blog/:articleId`.
+- **After Slice D:** manual click-through — Nav's "Blog" link from `/`
+  navigates to `/blog`; homepage no longer shows any article content.
+- **Final (Slice H):** `npm run build && npm test -- --run && npx eslint`
+  all pass; zero `/#blog` references remain in `src/`; every v2.0 Success
+  Criterion in `specs/personal-website/spec.md` re-verified manually.
