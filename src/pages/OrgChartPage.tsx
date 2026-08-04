@@ -3,6 +3,13 @@ import { Link } from 'react-router-dom'
 import { Footer } from '../components/Footer'
 import { profile } from '../content/profile'
 import { company, departments, type Department, type OrgRole } from '../content/orgChart'
+import {
+  ceoAgent,
+  agentDepartments,
+  type AgentDepartment,
+  type AgentNode,
+  type AgentOrchestrator,
+} from '../content/agentOrgChart'
 
 function RoleCard({ role }: { role: OrgRole }) {
   return (
@@ -123,6 +130,120 @@ function CompanyCard() {
   )
 }
 
+function AgentSkillCard({ agent }: { agent: AgentNode }) {
+  return (
+    <div className="flex min-w-[200px] flex-col items-center gap-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-center shadow-sm transition-shadow hover:shadow-md">
+      <p className="text-sm font-semibold text-slate-900">{agent.name}</p>
+      <p className="text-xs text-slate-500">{agent.tier}</p>
+      <p className="text-xs text-slate-400">Inputs: {agent.inputs.join(', ')}</p>
+      <p className="text-xs text-slate-400">Produces: {agent.produces.join(', ')}</p>
+    </div>
+  )
+}
+
+function AgentSkillNode({ agent }: { agent: AgentNode }) {
+  return (
+    <li>
+      <AgentSkillCard agent={agent} />
+    </li>
+  )
+}
+
+function OrchestratorCard({
+  agentDept,
+  expanded,
+  onToggle,
+}: {
+  agentDept: AgentDepartment
+  expanded: boolean
+  onToggle: () => void
+}) {
+  const orchestrator: AgentOrchestrator = agentDept.orchestrator
+
+  return (
+    <div className="group relative">
+      <div
+        className="flex min-w-[210px] flex-col items-center gap-1 rounded-xl border border-slate-200 border-t-4 bg-white px-4 py-3 text-center shadow-sm transition-shadow hover:shadow-md"
+        style={{ borderTopColor: agentDept.accentColor }}
+      >
+        <p className="text-sm font-semibold text-slate-900">{orchestrator.name}</p>
+        <span
+          className="rounded-full px-2 py-0.5 text-xs font-semibold text-white"
+          style={{ backgroundColor: agentDept.accentColor }}
+        >
+          {agentDept.name}
+        </span>
+        <p className="text-xs text-slate-500">{orchestrator.tier}</p>
+        <p className="text-xs text-slate-400">{orchestrator.kr}</p>
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${orchestrator.name} skills`}
+          onClick={onToggle}
+          className="mt-1 flex h-6 w-6 items-center justify-center rounded-full border border-slate-300 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+        >
+          {expanded ? '−' : '+'}
+        </button>
+      </div>
+
+      <div className="pointer-events-none invisible absolute left-1/2 top-full z-50 mt-3 w-[22rem] -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-4 text-left text-xs opacity-0 shadow-xl transition-all duration-150 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100">
+        <p className="text-sm font-semibold" style={{ color: agentDept.accentColor }}>
+          {orchestrator.name}
+        </p>
+        <p className="mt-1 text-slate-500">KR ownership: {orchestrator.kr}</p>
+
+        <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Tier-2 Skills</p>
+        <ul className="mt-1 space-y-1.5">
+          {agentDept.skills.map((skill) => (
+            <li key={skill.id} className="text-slate-600">
+              {skill.name}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+function OrchestratorNode({ agentDept }: { agentDept: AgentDepartment }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <li>
+      <OrchestratorCard agentDept={agentDept} expanded={expanded} onToggle={() => setExpanded((prev) => !prev)} />
+      {agentDept.skills.length > 0 && expanded && (
+        <ul>
+          {agentDept.skills.map((skill) => (
+            <AgentSkillNode key={skill.id} agent={skill} />
+          ))}
+        </ul>
+      )}
+    </li>
+  )
+}
+
+function CeoAgentCard() {
+  return (
+    <div className="group relative">
+      <div className="flex min-w-[240px] flex-col items-center gap-1 rounded-xl bg-slate-900 px-6 py-4 text-center text-white shadow-md transition-shadow hover:shadow-lg">
+        <p className="text-base font-semibold">{ceoAgent.name}</p>
+        <p className="text-sm text-slate-300">Executive Board</p>
+      </div>
+
+      <div className="pointer-events-none invisible absolute left-1/2 top-full z-50 mt-3 w-[24rem] -translate-x-1/2 rounded-xl border border-slate-200 bg-white p-4 text-left text-xs opacity-0 shadow-xl transition-all duration-150 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Responsibilities</p>
+        <ul className="mt-1 space-y-1 text-slate-600">
+          {ceoAgent.responsibilities.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+        <p className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Agent Tiering</p>
+        <p className="mt-1 leading-relaxed text-slate-700">{ceoAgent.tieringNote}</p>
+      </div>
+    </div>
+  )
+}
+
 export function OrgChartPage() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -168,6 +289,31 @@ export function OrgChartPage() {
                 <ul>
                   {departments.map((dept) => (
                     <DepartmentNode key={dept.id} dept={dept} />
+                  ))}
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-6xl px-6 pt-4">
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Agent Model</p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-900">Enterprise Multi-Agent Architecture</h2>
+          <p className="mt-4 max-w-3xl text-slate-600">
+            Cùng cấu trúc 5 phòng ban, nhưng mỗi phòng ban được vận hành bởi một AI Agent điều phối (Tier-1,
+            persistent) và các AI Agent kỹ năng theo yêu cầu (Tier-2, on-demand). Màu sắc mỗi phòng ban trùng với mô
+            hình vật lý phía trên để dễ đối chiếu.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto pb-16">
+          <div className="org-tree mx-auto w-fit px-8">
+            <ul>
+              <li>
+                <CeoAgentCard />
+                <ul>
+                  {agentDepartments.map((agentDept) => (
+                    <OrchestratorNode key={agentDept.id} agentDept={agentDept} />
                   ))}
                 </ul>
               </li>

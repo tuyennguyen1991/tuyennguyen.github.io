@@ -172,3 +172,107 @@ None — all resolved in `specs/Org_Chart/spec.md` v2.0 Decisions.
 - [x] No new npm dependency added
 - [x] No regression in v1.0 hover-panel behavior
 - [x] Ready for human final review
+
+---
+
+## Phase 5: v3.0 Enterprise Multi-Agent Architecture
+
+Based on: `specs/Org_Chart/spec.md` v3.0, `specs/Org_Chart/plan.md` §7.
+Decisions confirmed: duplicate the toggle component (no shared
+extraction); no hover panel on Tier-2 skill cards; agent department color
+matches its paired physical department (no duplicate legend).
+
+- [ ] Task: Create agent org chart content module
+  - Acceptance: `src/content/agentOrgChart.ts` defines `CeoAgentInfo`,
+    `AgentNode`, `AgentDepartment` types; exports `ceoAgent` and
+    `agentDepartments` (5 entries, `id`s `bd`/`delivery`/`rd`/`esg`/`hr`
+    matching `orgChart.ts`); each `AgentDepartment` has one Tier-1
+    orchestrator (name, KR ownership, inputs, produces) and its Tier-2
+    skills array, transcribed from
+    `Goals/ORG_Chart/Enterprise-Multi-Agent-Architecture.md` §Role → Agent
+    Traceability; 5 orchestrators + 18 skills = 23 agents total; each
+    `accentColor` copied verbatim from the paired `Department.accentColor`
+    in `src/content/orgChart.ts`.
+  - Verify: `npx tsc -p tsconfig.app.json --noEmit` passes on this file;
+    manual count of 23 agents and 5 matching accent colors.
+  - Files: `src/content/agentOrgChart.ts`
+
+- [ ] Task: Build the agent tree skeleton below the physical tree
+  - Acceptance: `OrgChartPage.tsx` renders a new "Enterprise Multi-Agent
+    Architecture" heading and a second `.org-tree` block after the
+    existing physical tree, with `CeoAgentCard` → `OrchestratorCard` (×5)
+    → `AgentSkillCard` (×18) nesting mirroring `CompanyCard` →
+    `DepartmentCard` → `RoleCard`; `AgentSkillCard` shows Tier/Inputs/
+    Produces as static text with no hover panel (Decision 6).
+  - Verify: `npm run dev`, visit `/org-chart`, confirm the new section
+    renders below the physical tree with all 23 agents visible (no toggle
+    yet at this task).
+  - Files: `src/pages/OrgChartPage.tsx`
+
+- [ ] Task: Add expand/collapse toggle and hover panels to `OrchestratorCard`
+  - Acceptance: each `OrchestratorCard` has its own `useState(false)` and a
+    duplicated toggle `<button aria-expanded>` (not a shared component
+    with `DepartmentCard`, Decision 5), showing `+`/`−`, gating its
+    Tier-2 skills `<ul>`; default collapsed on first render; hovering
+    `OrchestratorCard` shows a panel with its KR ownership + skill-name
+    list; hovering `CeoAgentCard` shows a panel with the Tier-1/Tier-2
+    explainer text.
+  - Verify: `npx tsc -p tsconfig.app.json --noEmit` passes; manual check —
+    all 5 orchestrators start collapsed (`+`, no skill cards), clicking one
+    reveals only its own skills and flips to `−`, hover panels appear on
+    orchestrator and CEO cards.
+  - Files: `src/pages/OrgChartPage.tsx`
+
+- [ ] Task: Verify agent-tree/physical-tree independence
+  - Acceptance: expanding/collapsing an `OrchestratorCard` never changes
+    the expand state of the physical `DepartmentCard` with the same
+    paired `id`, and vice versa; expanding one orchestrator never reveals
+    another orchestrator's skills.
+  - Verify: manual check — expand physical `bd` department, confirm agent
+    `bd` orchestrator (`head_of_sales`) is still collapsed, and vice versa.
+  - Files: `src/pages/OrgChartPage.tsx` (only if a conflict is found)
+
+- [ ] Task: Add tests for the agent tree
+  - Acceptance: `OrgChartPage.test.tsx` covers: (a) default render — no
+    Tier-2 skill agent names present anywhere, all 5 orchestrator toggles
+    read the collapsed accessible name; (b) clicking one orchestrator's
+    toggle reveals only that orchestrator's skill names and flips
+    `aria-expanded` to `"true"`; (c) clicking again removes them and
+    flips back to `"false"`; (d) expanding one orchestrator does not
+    reveal another's skills; (e) expanding a physical department does not
+    expand its paired agent orchestrator (and vice versa); (f) hovering an
+    orchestrator card shows its KR + skill-name text; (g) all existing
+    v1.0/v2.0 physical-tree tests still pass unmodified.
+  - Verify: `npm test -- --run src/pages/OrgChartPage.test.tsx` passes.
+  - Files: `src/pages/OrgChartPage.test.tsx`
+
+- [ ] Task: Full regression pass
+  - Acceptance: no TypeScript, build, lint, or test failures anywhere in
+    the repo caused by this change; every Success Criterion in
+    `specs/Org_Chart/spec.md` v3.0 holds; no new npm dependency added.
+  - Verify: `npx tsc -p tsconfig.app.json --noEmit`, `npm run build`,
+    `npx eslint src/pages/OrgChartPage.tsx src/pages/OrgChartPage.test.tsx
+    src/content/agentOrgChart.ts`, `npm test -- --run`.
+  - Files: (verification only, no new changes expected)
+
+### Risks and Mitigations (Phase 5)
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Hand-transcribing 23 agents from a long Markdown file introduces drift (wrong Tier, Inputs/Produces, or department grouping) | Medium | Copied directly from §Role → Agent Traceability's table rows (authoritative), row count cross-checked against the table's own 23-row total |
+| Agent tree's expand state accidentally coupled to physical tree's state for the same department `id` | Medium | Each `OrchestratorNode` keeps its own independent `useState`, verified with an explicit independence test (Task 4/5) |
+| `AgentSkillCard` accidentally gains a hover panel by copy-paste from `RoleCard`/`DepartmentCard` | Low | Decision 6 explicit; no `group`/hover markup added to `AgentSkillCard`, verified in tests |
+| Agent department `accentColor` drifts from its physical pair after a future edit to one file only | Low | Value copied verbatim at write-time from `orgChart.ts`; traceability documented in spec Decision 7 and plan §7.1 |
+
+### Open Questions (Phase 5)
+
+None — all 3 v3.0 questions resolved in `specs/Org_Chart/spec.md` v3.0
+Decisions (5, 6, 7).
+
+### Checkpoint: v3.0 Complete
+
+- [ ] All Success Criteria in `specs/Org_Chart/spec.md` v3.0 verified
+- [ ] `npm run build`, `npm test -- --run`, `npx eslint` all green
+- [ ] No new npm dependency added
+- [ ] No regression in v1.0/v2.0 behavior
+- [ ] Ready for human final review

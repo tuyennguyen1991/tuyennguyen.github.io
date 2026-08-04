@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 import { OrgChartPage } from './OrgChartPage'
 import { company, departments } from '../content/orgChart'
+import { ceoAgent, agentDepartments } from '../content/agentOrgChart'
 
 function renderPage() {
   return render(<OrgChartPage />, { wrapper: MemoryRouter })
@@ -102,5 +103,84 @@ describe('OrgChartPage', () => {
       expect(container.textContent).toContain(kr.title)
     })
     expect(screen.getByText(esg.valueStream.join(' → '))).toBeInTheDocument()
+  })
+
+  it('renders the Enterprise Multi-Agent Architecture heading, CEO Agent, and every orchestrator collapsed', () => {
+    const { container } = renderPage()
+    expect(screen.getByText('Enterprise Multi-Agent Architecture')).toBeInTheDocument()
+    expect(screen.getAllByText(ceoAgent.name).length).toBeGreaterThan(0)
+
+    agentDepartments.forEach((agentDept) => {
+      expect(screen.getAllByText(agentDept.orchestrator.name).length).toBeGreaterThan(0)
+      const toggle = screen.getByRole('button', { name: `Expand ${agentDept.orchestrator.name} skills` })
+      expect(toggle).toHaveAttribute('aria-expanded', 'false')
+      expect(toggle).toHaveTextContent('+')
+      agentDept.skills.forEach((skill) => {
+        expect(container.textContent).not.toContain(`Inputs: ${skill.inputs.join(', ')}`)
+      })
+    })
+  })
+
+  it('expands an orchestrator to reveal only its own Tier-2 skill agents and updates the toggle', () => {
+    const { container } = renderPage()
+    const bdAgentDept = agentDepartments.find((d) => d.id === 'bd')!
+    const otherAgentDept = agentDepartments.find((d) => d.id === 'delivery')!
+
+    const toggle = screen.getByRole('button', { name: `Expand ${bdAgentDept.orchestrator.name} skills` })
+    fireEvent.click(toggle)
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(toggle).toHaveTextContent('−')
+    bdAgentDept.skills.forEach((skill) => {
+      expect(container.textContent).toContain(`Inputs: ${skill.inputs.join(', ')}`)
+    })
+    otherAgentDept.skills.forEach((skill) => {
+      expect(container.textContent).not.toContain(`Inputs: ${skill.inputs.join(', ')}`)
+    })
+  })
+
+  it('collapses an expanded orchestrator back down, hiding its skill agents and reverting the toggle', () => {
+    const { container } = renderPage()
+    const hrAgentDept = agentDepartments.find((d) => d.id === 'hr')!
+
+    const expandToggle = screen.getByRole('button', { name: `Expand ${hrAgentDept.orchestrator.name} skills` })
+    fireEvent.click(expandToggle)
+    expect(container.textContent).toContain(`Inputs: ${hrAgentDept.skills[0].inputs.join(', ')}`)
+
+    const collapseToggle = screen.getByRole('button', { name: `Collapse ${hrAgentDept.orchestrator.name} skills` })
+    fireEvent.click(collapseToggle)
+
+    expect(container.textContent).not.toContain(`Inputs: ${hrAgentDept.skills[0].inputs.join(', ')}`)
+    expect(
+      screen.getByRole('button', { name: `Expand ${hrAgentDept.orchestrator.name} skills` }),
+    ).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('keeps the agent tree and physical tree toggle states fully independent for the same paired department', () => {
+    renderPage()
+
+    const physicalToggle = screen.getByRole('button', { name: 'Expand BD / Kinh doanh department' })
+    fireEvent.click(physicalToggle)
+    expect(physicalToggle).toHaveAttribute('aria-expanded', 'true')
+
+    const bdAgentDept = agentDepartments.find((d) => d.id === 'bd')!
+    const agentToggle = screen.getByRole('button', { name: `Expand ${bdAgentDept.orchestrator.name} skills` })
+    expect(agentToggle).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(agentToggle)
+    expect(agentToggle).toHaveAttribute('aria-expanded', 'true')
+    expect(
+      screen.getByRole('button', { name: 'Collapse BD / Kinh doanh department' }),
+    ).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it("shows an orchestrator's KR ownership and skill-name list in its hover panel", () => {
+    const { container } = renderPage()
+    const rdAgentDept = agentDepartments.find((d) => d.id === 'rd')!
+
+    expect(container.textContent).toContain(rdAgentDept.orchestrator.kr)
+    rdAgentDept.skills.forEach((skill) => {
+      expect(container.textContent).toContain(skill.name)
+    })
   })
 })

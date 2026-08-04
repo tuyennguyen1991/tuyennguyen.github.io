@@ -163,3 +163,111 @@ or `Nav.tsx` are anticipated — this delta is scoped entirely to
 - **Final (Slice E):** `npm run build && npm test -- --run && npx eslint`
   all pass; every Success Criterion in `specs/Org_Chart/spec.md` v2.0
   re-verified manually.
+
+---
+
+## 7. Delta Plan: v3.0 Enterprise Multi-Agent Architecture (Phase 2 of `spec-driven-development`)
+
+Based on: `specs/Org_Chart/spec.md` v3.0 (Decisions confirmed: duplicate the
+toggle component rather than extract a shared one; no hover panel on
+Tier-2 skill cards; agent department color matches its paired physical
+department, no duplicate legend).
+
+### 7.1 Dependency Graph
+
+```
+1. Content module (src/content/agentOrgChart.ts) — NEW
+   - CeoAgentInfo, AgentDepartment, AgentNode types
+   - `ceoAgent` and `agentDepartments` data transcribed from
+     Goals/ORG_Chart/Enterprise-Multi-Agent-Architecture.md
+     (§Layer 1, §Agent Tiering Model, §Layer 2/3, §Role → Agent
+     Traceability, §Mapping to KPI Structure)
+   - each AgentDepartment.accentColor copied verbatim from the paired
+     Department.accentColor in src/content/orgChart.ts (Decision 7)
+   └─ no dependency on orgChart.ts's types (parallel file, Assumption 13),
+      but its accentColor values are sourced from it — must be written
+      after inspecting orgChart.ts's 5 accentColor values
+
+2. OrgChartPage additions (src/pages/OrgChartPage.tsx)
+   - AgentSkillCard (static text only — Tier/Inputs/Produces, no hover
+     panel, Decision 6)
+   - AgentSkillNode (recursive-shaped like RoleNode, but skills are flat
+     per orchestrator — no nested children in the traceability table)
+   - OrchestratorCard (duplicates DepartmentCard's toggle button markup —
+     own useState, no shared component, Decision 5) with a hover panel
+     (KR ownership + skill-name list, mirrors DepartmentCard's hover panel
+     since this level DOES get hover per spec requirement 6/Decision text)
+   - OrchestratorNode (duplicates DepartmentNode's expand-gated <ul> pattern)
+   - CeoAgentCard (duplicates CompanyCard's hover panel pattern, showing
+     Tiering note instead of SMART Objective)
+   - new "Enterprise Multi-Agent Architecture" heading + second `.org-tree`
+     block, appended after the existing physical tree's closing </div>
+   └─ depends on (1) for data; reuses existing `.org-tree` CSS as-is (no
+      src/index.css changes)
+
+3. Tests (src/pages/OrgChartPage.test.tsx)
+   └─ depends on (2)
+```
+
+No changes to `src/content/orgChart.ts`, `src/index.css`, `AppRoutes.tsx`,
+or `Nav.tsx` — same route, same nav entry, same CSS connector rules reused
+by the new section's markup.
+
+### 7.2 Implementation Order (vertical slices)
+
+1. **Slice A — Agent content data.** Create `src/content/agentOrgChart.ts`
+   with `CeoAgentInfo`, `AgentNode`, `AgentDepartment` types; transcribe the
+   CEO Agent (name, responsibilities, a short Tier-1/Tier-2 explainer for
+   its hover panel) and all 5 agent departments (`bd`, `delivery`, `rd`,
+   `esg`, `hr` — same `id`s as `orgChart.ts` for pairing) each with one
+   Tier-1 orchestrator (id, name, KR ownership, inputs, produces) and its
+   Tier-2 skills array (id, name, inputs, produces) from §Role → Agent
+   Traceability — 23 agents total (5 + 18), verified against the
+   traceability table row count. Copy each department's `accentColor` from
+   `orgChart.ts` verbatim.
+2. **Slice B — Static agent tree skeleton.** In `OrgChartPage.tsx`, add
+   `CeoAgentCard`, `OrchestratorCard` (no toggle yet, always show skills),
+   `AgentSkillCard`, render a new heading + `.org-tree` block after the
+   physical tree, mirroring the company→department→role nesting with
+   ceoAgent→agentDepartments→skills. No hover panel on `AgentSkillCard`
+   (Decision 6); no toggle yet.
+3. **Slice C — Toggle + hover panel on OrchestratorCard.** Add
+   `useState(false)` + toggle `<button>` to `OrchestratorCard` (duplicated
+   pattern, own state, Decision 5) and gate the skills `<ul>` on it
+   (default collapsed); add `OrchestratorCard`'s hover panel (KR ownership
+   + skill-name list) and `CeoAgentCard`'s hover panel (Tiering note),
+   both using the existing `group`/`group-hover` Tailwind pattern.
+4. **Slice D — Tests.** In `OrgChartPage.test.tsx`, add: (a) default state
+   for the agent tree — no skill-agent names present, all orchestrators
+   show `+`; (b) expanding one orchestrator reveals only its own skills;
+   (c) collapsing reverts; (d) `aria-expanded` toggles correctly; (e)
+   independence from the physical tree's toggles for the same department
+   `id`; (f) orchestrator hover panel shows KR + skill list; (g) existing
+   v1.0/v2.0 physical-tree tests still pass unmodified.
+5. **Slice E — Full regression.** `npx tsc -p tsconfig.app.json --noEmit`,
+   `npm run build`, `npx eslint src/pages/OrgChartPage.tsx
+   src/pages/OrgChartPage.test.tsx src/content/agentOrgChart.ts`,
+   `npm test -- --run`.
+
+### 7.3 Risks & Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Transcribing 23 agents from a long Markdown file by hand introduces drift vs. source (wrong Tier, wrong Inputs/Produces, wrong department grouping) | Slice A copies directly from §Role → Agent Traceability's table (authoritative row-by-row mapping) rather than re-deriving from the narrative sections; row count cross-checked against the table's own 23-row total. |
+| Accidentally coupling the agent tree's `expanded` state to the physical tree's state for the same department `id` (e.g. via a shared keyed map) | Each `OrchestratorNode`/`DepartmentNode` keeps its own independent `useState`, exactly like the existing per-instance pattern — no shared state object introduced (Decision 5 rules out a shared component too). |
+| Giving `AgentSkillCard` a hover panel by copy-paste habit from `RoleCard`/`DepartmentCard` | Explicit Decision 6 — `AgentSkillCard` has no `group`/hover markup at all, verified in Slice D by asserting no additional hover-only text appears on mouseover for a skill card. |
+| Agent department `accentColor` drifting from its physical pair after a future edit to one file but not the other | Slice A sources the value directly from `orgChart.ts`'s existing constants at write-time; a code comment is not used (no comments per project convention) — instead the traceability is documented here in the plan and in spec Assumption 10/Decision 7. |
+
+### 7.4 Verification Checkpoints
+
+- **After Slice A:** `npx tsc -p tsconfig.app.json --noEmit` passes on the
+  new content file in isolation; manual count confirms 5 orchestrators + 18
+  skills = 23 agents, and 5 `accentColor` values match `orgChart.ts` exactly.
+- **After Slice C:** `npm run dev`, manual check — agent tree renders below
+  physical tree, all orchestrators collapsed by default with matching
+  department colors, clicking `+` reveals only that orchestrator's skills
+  with no hover panel on skill cards, hover on orchestrator/CEO cards shows
+  the new panels.
+- **Final (Slice E):** `npm run build && npm test -- --run && npx eslint`
+  all pass; every v3.0 Success Criterion in `specs/Org_Chart/spec.md`
+  checked off and re-verified manually.
